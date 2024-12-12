@@ -4,7 +4,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import terser from '@rollup/plugin-babel'
 import json from '@rollup/plugin-json'
 export default {
-    input: 'src/index.js',
+    input: 'src/index.ts',
     output: [
         {
             file: 'dist/bundle.cjs.js',

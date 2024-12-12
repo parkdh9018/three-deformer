@@ -6,7 +6,8 @@
     "type": "module",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "rollup -c"
+        "build": "rollup -c",
+        "watch": "rollup -cw"
     },
     "keywords": [],
     "author": "Donghwan park <parkdh9018@naver.com>",
@@ -19,6 +20,8 @@
         "@rollup/plugin-json": "^6.1.0",
         "@rollup/plugin-node-resolve": "^15.3.0",
         "@rollup/plugin-terser": "^0.4.4",
-        "rollup": "^4.28.1"
+        "@rollup/plugin-typescript": "^12.1.1",
+        "rollup": "^4.28.1",
+        "typescript": "^5.7.2"
     }
 }
