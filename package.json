@@ -2,10 +2,12 @@
     "name": "path-navigator",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "dist/bundle.cjs.js",
+    "module": "dist/bundle.esm.js",
     "type": "module",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "rollup -c -w",
         "build": "rollup -c",
         "watch": "rollup -cw"
     },
@@ -27,6 +29,8 @@
         "eslint-plugin-prettier": "^5.2.1",
         "prettier": "^3.4.2",
         "rollup": "^4.28.1",
+        "rollup-plugin-livereload": "^2.0.5",
+        "rollup-plugin-serve": "^1.1.1",
         "typescript": "^5.7.2",
         "typescript-eslint": "^8.18.1"
     }
