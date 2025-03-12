@@ -57,8 +57,9 @@
 				mesh = new THREE.Mesh( geometry, material );
 
 				deformer = new Deformer(mesh);
-				deformer.applyTwist();
-				deformer.applySpherify();
+				deformer.addTwist();
+				deformer.addSpherify();
+				deformer.applyDeformers();
 
 				scene.add( mesh );
 
