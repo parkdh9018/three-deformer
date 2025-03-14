@@ -2,7 +2,8 @@ import { BufferGeometry, Float32BufferAttribute,  Mesh,  BufferAttribute, Interl
 
 
 type EffectFunction = (vertex : Vector3, index? : number) => Vector3;
-type Effect ={
+type Effect = {
+  index : number,
   matrix : Matrix4,
   effect : EffectFunction,
 };
@@ -56,7 +57,7 @@ class Deformer {
   }
 
   addEffect(name: string, effect: EffectFunction, matrix: Matrix4 = new Matrix4()): void {
-    this.effects[name] = { effect, matrix };
+    this.effects[name] = { index : Object.keys(this.effects).length, effect, matrix };
   }
   
   removeEffect(name : string) : void {
@@ -82,7 +83,7 @@ class Deformer {
   //   this.changeValue(0, beforeValue);
   // }
 
-  addTwist() : void {
+  addTwist(matrix? : Matrix4) : void {
 
     const direction = new Vector3( 1, 0, 0 );
     
@@ -92,7 +93,7 @@ class Deformer {
       vertex.applyAxisAngle( direction, Math.PI * x / 2 )
 
       return vertex
-    })
+    }, matrix)
 
   }
 
@@ -110,14 +111,21 @@ class Deformer {
 
 
 
-  changeValue(idx : number, value : number) {
+  changeWeight(name : string, value : number) {
     
     if(!this.mesh.morphTargetInfluences) {
       console.error("Mesh does not have morphTargetInfluences");
       return;
     } 
 
-    this.mesh.morphTargetInfluences[idx] = value;
+    const index = this.effects[name].index;
+
+    if(index === undefined) {
+      console.error("Effect does not exist");
+      return;
+    }
+
+    this.mesh.morphTargetInfluences[index] = value;
   }
 }
 

@@ -58,7 +58,7 @@
 				mesh = new THREE.Mesh( geometry, material );
 
 				deformer = new Deformer(mesh);
-				deformer.addTwist(new THREE.Vector3(0, 0, 0));
+				deformer.addTwist();
 				// deformer.addSpherify();
 				deformer.apply();
 
@@ -102,7 +102,7 @@
 
 				gui.add( params, 'Twist', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
-					deformer.changeValue(0, value)
+					deformer.changeWeight('twist', value)
 
 				} );
 				gui.add( params, 'Spherify', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
