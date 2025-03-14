@@ -25,6 +25,7 @@
 
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+			import Stats from 'three/addons/libs/stats.module.js';
 			import { Deformer } from 'Deformer';
 
 			let container, camera, scene, renderer, mesh;
@@ -57,13 +58,20 @@
 				mesh = new THREE.Mesh( geometry, material );
 
 				deformer = new Deformer(mesh);
-				deformer.addTwist();
-				deformer.addSpherify();
-				deformer.applyDeformers();
+				deformer.addTwist(new THREE.Vector3(0, 0, 0));
+				// deformer.addSpherify();
+				deformer.apply();
 
 				scene.add( mesh );
 
 				initGUI();
+
+				//stats
+				const stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -71,6 +79,7 @@
 				renderer.setAnimationLoop( function () {
 
 					renderer.render( scene, camera );
+					stats.update();
 
 				} );
 				container.appendChild( renderer.domElement );
@@ -98,11 +107,13 @@
 				} );
 				gui.add( params, 'Spherify', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
-					deformer.changeValue(1, value)
+					// deformer.changeValue(1, value)
+					// deformer.changeCenter(value);
 
 				} );
 
 			}
+
 
 			function onWindowResize() {
 

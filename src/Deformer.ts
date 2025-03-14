@@ -1,26 +1,35 @@
-import { BufferGeometry, Float32BufferAttribute,  Mesh,  BufferAttribute, InterleavedBufferAttribute, Vector3 } from 'three';
+import { BufferGeometry, Float32BufferAttribute,  Mesh,  BufferAttribute, InterleavedBufferAttribute,  Matrix4, Vector3 } from 'three';
 
 
-type DeformerFunction = (x : number, y : number, z : number, index? : number) => Vector3;
+type EffectFunction = (vertex : Vector3, index? : number) => Vector3;
+type Effect ={
+  matrix : Matrix4,
+  effect : EffectFunction,
+};
 class Deformer {
 
   mesh : Mesh;
   geometry : BufferGeometry;
-
-  deformerList: DeformerFunction[] = [];
+  effects : Record<string, Effect>;
 
   constructor(mesh : Mesh) {
-
     this.mesh = mesh;
     this.geometry = mesh.geometry;
     this.geometry.morphAttributes.position = [];
-
+    this.effects = {}
   }
 
-  applyDeformers () : void{
+  apply() : void {
+    this.applyDeformers(this.geometry);
+    this.mesh.updateMorphTargets();
+  }
 
-    const positionAttribute = this.geometry.attributes.position;
-    const positionList = Array.from({length: this.deformerList.length}, () => []);
+  applyDeformers (geometry : BufferGeometry) : void{
+
+    geometry.morphAttributes.position = [];
+
+    const positionAttribute = geometry.attributes.position;
+    const positionList = Array.from({length: Object.keys(this.effects).length}, () => []);
 
     for ( let i = 0; i < positionAttribute.count; i ++ ) {
 
@@ -28,30 +37,57 @@ class Deformer {
       const y = positionAttribute.getY( i );
       const z = positionAttribute.getZ( i );
 
-      for (let j = 0; j < this.deformerList.length; j ++) {
-        const vector = this.deformerList[j](x, y, z);
+      const vertex = new Vector3(x, y, z);
+
+      Object.entries(this.effects).forEach(([_, {effect, matrix}], j) => {
+
+        vertex.applyMatrix4(matrix);  
+        const vector = effect(vertex, i);
+
         vector.toArray(positionList[j], positionList[j].length);
-      }
+      })
+      
     }
 
     for(let i=0;i<positionList.length;i++) {
-      this.geometry.morphAttributes.position.push(new Float32BufferAttribute( positionList[i], 3 ));
-      this.mesh.updateMorphTargets();
+      geometry.morphAttributes.position.push(new Float32BufferAttribute( positionList[i], 3 ));
     }
 
   }
 
-  addDeformer(deformer : DeformerFunction) : void {
-    this.deformerList.push(deformer);
+  addEffect(name: string, effect: EffectFunction, matrix: Matrix4 = new Matrix4()): void {
+    this.effects[name] = { effect, matrix };
   }
+  
+  removeEffect(name : string) : void {
+    delete this.effects[name];
+  }
+  
+  // changeCenter( y : number ) : void {
+  //   const tempGeometry = this.geometry.clone();
+
+  //   let beforeValue = 0;
+
+  //   if(this.mesh.morphTargetInfluences) {
+  //     beforeValue = this.mesh.morphTargetInfluences[0];
+  //   }
+
+  //   this.removeEffect('twist');
+  //   this.addTwist();
+  //   this.applyDeformers(tempGeometry);
+
+  //   this.mesh.geometry = tempGeometry;
+  //   this.mesh.updateMorphTargets();
+    
+  //   this.changeValue(0, beforeValue);
+  // }
 
   addTwist() : void {
 
     const direction = new Vector3( 1, 0, 0 );
-    const vertex = new Vector3();
     
-    this.addDeformer((x,y,z) => {
-
+    this.addEffect('twist',(vertex) => {
+      const { x, y, z } = vertex;
       vertex.set( x * 2, y, z );
       vertex.applyAxisAngle( direction, Math.PI * x / 2 )
 
@@ -62,9 +98,8 @@ class Deformer {
 
   addSpherify() : void { 
 
-    const vertex = new Vector3();
-
-    this.addDeformer((x,y,z) => {
+    this.addEffect('spherify', (vertex) => {
+      const { x, y, z } = vertex;
       vertex.set( 
         x * Math.sqrt( 1 - ( y * y / 2 ) - ( z * z / 2 ) + ( y * y * z * z / 3 ) ),
         y * Math.sqrt( 1 - ( z * z / 2 ) - ( x * x / 2 ) + ( z * z * x * x / 3 ) ),
@@ -72,6 +107,8 @@ class Deformer {
       return vertex;
   })
   }
+
+
 
   changeValue(idx : number, value : number) {
     
