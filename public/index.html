@@ -30,6 +30,7 @@
 
 			let container, camera, scene, renderer, mesh;
 			let deformer;
+			let _matrix;
 
 			init();
 
@@ -58,8 +59,7 @@
 				mesh = new THREE.Mesh( geometry, material );
 
 				deformer = new Deformer(mesh);
-				deformer.addTwist();
-				// deformer.addSpherify();
+				deformer.addDeformer('twist');
 				deformer.apply();
 
 				scene.add( mesh );
@@ -93,26 +93,44 @@
 
 			function initGUI() {
 
+				_matrix = new THREE.Matrix4();
+
 				// Set up dat.GUI to control targets
 				const params = {
-					Spherify: 0,
-					Twist: 0,
+					twist: 0,
+					position : {
+						x: 0,
+						y: 0,
+						z: 0
+					}
 				};
 				const gui = new GUI( { title: 'Morph Targets' } );
 
-				gui.add( params, 'Twist', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+				gui.add( params, 'twist', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
 					deformer.changeWeight('twist', value)
 
 				} );
-				gui.add( params, 'Spherify', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
-					// deformer.changeValue(1, value)
-					// deformer.changeCenter(value);
+				const folder = gui.addFolder( 'Position' );
+				folder.add( params.position, 'x', -10, 10 ).step(0.01).onChange( function ( value ) {
+
+					deformer.changeMatrix('twist', new THREE.Matrix4().makeTranslation( value, params.position.y, params.position.z ));
 
 				} );
+				folder.add( params.position, 'y', -10, 10 ).step(0.01).onChange( function ( value ) {
 
+					deformer.changeMatrix('twist', new THREE.Matrix4().makeTranslation(  params.position.x,value, params.position.z ));
+
+				} );
+				folder.add( params.position, 'y', -10, 10 ).step(0.01).onChange( function ( value ) {
+
+					deformer.changeMatrix('twist', new THREE.Matrix4().makeTranslation(  params.position.x, params.position.z, value ));
+
+				} );
 			}
+
+
 
 
 			function onWindowResize() {

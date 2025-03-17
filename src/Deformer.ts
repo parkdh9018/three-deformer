@@ -63,27 +63,31 @@ class Deformer {
   removeEffect(name : string) : void {
     delete this.effects[name];
   }
-  
-  // changeCenter( y : number ) : void {
-  //   const tempGeometry = this.geometry.clone();
 
-  //   let beforeValue = 0;
+  changeMatrix(name : string, matrix : Matrix4) : void {
 
-  //   if(this.mesh.morphTargetInfluences) {
-  //     beforeValue = this.mesh.morphTargetInfluences[0];
-  //   }
+    if(!this.effects[name]) {
+      console.error("Effect does not exist");
+      return;
+    }
 
-  //   this.removeEffect('twist');
-  //   this.addTwist();
-  //   this.applyDeformers(tempGeometry);
+    this.effects[name].matrix = matrix;
 
-  //   this.mesh.geometry = tempGeometry;
-  //   this.mesh.updateMorphTargets();
+    let beforeValue = 0;
     
-  //   this.changeValue(0, beforeValue);
-  // }
+    if(this.mesh.morphTargetInfluences) {
+      beforeValue = this.mesh.morphTargetInfluences[0];
+    }
+    
+    const tempGeometry = this.geometry.clone();
+    
+    this.mesh.geometry = tempGeometry;
+    this.apply();
 
-  addTwist(matrix? : Matrix4) : void {
+    this.changeWeight(name, beforeValue);
+  }
+
+  twist(matrix? : Matrix4) : void {
 
     const direction = new Vector3( 1, 0, 0 );
     
@@ -97,7 +101,7 @@ class Deformer {
 
   }
 
-  addSpherify() : void { 
+  spherify(matrix? : Matrix4) : void { 
 
     this.addEffect('spherify', (vertex) => {
       const { x, y, z } = vertex;
@@ -106,7 +110,24 @@ class Deformer {
         y * Math.sqrt( 1 - ( z * z / 2 ) - ( x * x / 2 ) + ( z * z * x * x / 3 ) ),
         z * Math.sqrt( 1 - ( x * x / 2 ) - ( y * y / 2 ) + ( x * x * y * y / 3 ) ))
       return vertex;
-  })
+    },matrix)
+  }
+
+  addDeformer(name : string, matrix : Matrix4) : void {
+
+    switch(name) {
+      case 'twist':   
+        this.twist(matrix);
+        break;
+      case 'spherify':
+        this.spherify(matrix);
+        break;  
+      default:
+        console.error("Deformer does not exist");
+        break;
+    }   
+
+
   }
 
 
