@@ -37,10 +37,9 @@ class Deformer {
       const x = positionAttribute.getX( i );
       const y = positionAttribute.getY( i );
       const z = positionAttribute.getZ( i );
-
-      const vertex = new Vector3(x, y, z);
-
+      
       Object.entries(this.effects).forEach(([_, {effect, matrix}], j) => {
+        const vertex = new Vector3(x, y, z);
 
         vertex.applyMatrix4(matrix);  
         const vector = effect(vertex, i);
@@ -57,6 +56,12 @@ class Deformer {
   }
 
   addEffect(name: string, effect: EffectFunction, matrix: Matrix4 = new Matrix4()): void {
+
+    if(this.effects[name]) {
+      console.error(`Effect '${name}' already exists`);
+      return;
+    }
+
     this.effects[name] = { index : Object.keys(this.effects).length, effect, matrix };
   }
   
@@ -101,6 +106,39 @@ class Deformer {
 
   }
 
+  taper(direction: 'x' | 'y' | 'z', matrix?: Matrix4) : void {
+
+    this.geometry.computeBoundingBox();
+
+    if(this.geometry.boundingBox === null) {
+      console.error("Geometry does not have bounding box");
+      return;
+    }
+
+    const { min, max } = this.geometry.boundingBox;
+    let sc = 0;
+
+    this.addEffect('taper', (vertex) => {
+      const { x, y, z } = vertex;
+      switch(direction) {
+        case 'x':
+          sc = (x - min.x) / (max.x - min.x);
+          vertex.set( x, y * sc, z * sc );
+          break;
+        case 'y':
+          sc = (y - min.y) / (max.y - min.y);
+          vertex.set( x * sc, y, z * sc );
+          break;
+        case 'z':
+          sc = (z - min.z) / (max.z - min.z);
+          vertex.set( x * sc, y * sc, z );
+          break;
+      }
+      return vertex;
+    }, matrix)
+
+  }
+
   spherify(matrix? : Matrix4) : void { 
 
     this.addEffect('spherify', (vertex) => {
@@ -121,7 +159,10 @@ class Deformer {
         break;
       case 'spherify':
         this.spherify(matrix);
-        break;  
+        break;
+      case 'taper':
+        this.taper('x', matrix); 
+        break; 
       default:
         console.error("Deformer does not exist");
         break;
