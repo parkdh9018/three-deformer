@@ -64,7 +64,7 @@ class Deformer {
     delete this.effects[name];
   }
 
-  changeMatrix(name : string, matrix : Matrix4) : void {
+  transform(name : string, matrix : Matrix4) : void {
 
     if(!this.effects[name]) {
       console.error("Effect does not exist");
