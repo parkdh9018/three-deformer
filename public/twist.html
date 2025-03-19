@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - morph targets</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css" />
+	</head>
+
+	<body>
+		<div id="container"></div>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/",
+					"Deformer" : "/dist/bundle.esm.js"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+			import Stats from 'three/addons/libs/stats.module.js';
+			import { Deformer } from 'Deformer';
+
+			let container, camera, scene, renderer, mesh;
+			let deformer;
+			let _matrix;
+
+			init();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x8FBCD4 );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 20 );
+				camera.position.z = 10;
+				scene.add( camera );
+
+				scene.add( new THREE.AmbientLight( 0x8FBCD4, 1.5 ) );
+
+				const pointLight = new THREE.PointLight( 0xffffff, 200 );
+				camera.add( pointLight );
+
+				const geometry = new THREE.BoxGeometry( 2, 2, 2, 32, 32, 32 );
+				const material = new THREE.MeshPhongMaterial( {
+					color: 0xff0000,
+					flatShading: true
+				} );
+				
+				mesh = new THREE.Mesh( geometry, material );
+
+				deformer = new Deformer(mesh);
+				deformer.addTwist({direction : 'x'});
+				deformer.apply();
+
+				scene.add( mesh );
+
+				initGUI();
+
+				//stats
+				const stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( function () {
+
+					renderer.render( scene, camera );
+					stats.update();
+
+				} );
+				container.appendChild( renderer.domElement );
+
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.enableZoom = false;
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function initGUI() {
+
+				_matrix = new THREE.Matrix4();
+
+				// Set up dat.GUI to control targets
+				const params = {
+					twist: 0,
+					position : {
+						x: 0,
+						y: 0,
+						z: 0
+					},
+					rotation : {
+						x: 0,
+						y: 0,
+						z: 0
+					},
+					scale : {
+						x: 1,
+						y: 1,
+						z: 1
+					}
+				};
+				const gui = new GUI( { title: 'Morph Targets' } );
+
+				gui.add( params, 'twist', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+
+					deformer.changeWeight('twist', value)
+
+				} );
+
+				const folder = gui.addFolder( 'Position' );
+				folder.add( params.position, 'x', -3, 3 ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist',_matrix, params);
+
+				} );
+				folder.add( params.position, 'y', -3, 3 ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist',_matrix, params);
+
+				} );
+				folder.add( params.position, 'z', -3, 3 ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist',_matrix, params);
+
+				} );
+
+				const folder2 = gui.addFolder( 'Rotation' );
+
+				folder2.add( params.rotation, 'x', -Math.PI, Math.PI ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist',_matrix, params);
+
+				} );
+
+				folder2.add( params.rotation, 'y', -Math.PI, Math.PI ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist', _matrix, params);
+
+				} );
+
+				folder2.add( params.rotation, 'z', -Math.PI, Math.PI ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist', _matrix, params);
+
+				} );
+
+				const folder3 = gui.addFolder( 'Scale' );
+
+				folder3.add( params.scale, 'x', 0, 3 ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist', _matrix, params);
+
+				} );
+
+				folder3.add( params.scale, 'y', 0, 3 ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist', _matrix, params);
+
+				} );
+
+				folder3.add( params.scale, 'z', 0, 3 ).step(0.01).onChange( function ( value ) {
+
+					setMatrix('twist', _matrix, params);
+
+				} );
+
+			}
+
+
+			function setMatrix(name, matrix, params) {
+
+				matrix.compose(
+					new THREE.Vector3(params.position.x, params.position.y, params.position.z), 
+					new THREE.Quaternion().setFromEuler(new THREE.Euler(params.rotation.x, params.rotation.y, params.rotation.z) ),
+					new THREE.Vector3(params.scale.x, params.scale.y, params.scale.z));
+				deformer.transform(name, matrix);
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+		</script>
+
+	</body>
+</html>

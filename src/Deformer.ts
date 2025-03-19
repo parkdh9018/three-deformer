@@ -37,10 +37,9 @@ class Deformer {
       const x = positionAttribute.getX( i );
       const y = positionAttribute.getY( i );
       const z = positionAttribute.getZ( i );
-
-      const vertex = new Vector3(x, y, z);
-
+      
       Object.entries(this.effects).forEach(([_, {effect, matrix}], j) => {
+        const vertex = new Vector3(x, y, z);
 
         vertex.applyMatrix4(matrix);  
         const vector = effect(vertex, i);
@@ -56,7 +55,13 @@ class Deformer {
 
   }
 
-  addEffect(name: string, effect: EffectFunction, matrix: Matrix4 = new Matrix4()): void {
+  addEffect(name: string, effect: EffectFunction, matrix: Matrix4): void {
+
+    if(this.effects[name]) {
+      console.error(`Effect '${name}' already exists`);
+      return;
+    }
+
     this.effects[name] = { index : Object.keys(this.effects).length, effect, matrix };
   }
   
@@ -87,21 +92,74 @@ class Deformer {
     this.changeWeight(name, beforeValue);
   }
 
-  twist(matrix? : Matrix4) : void {
+  addTwist(option : TwistOption = {direction : 'x'}, matrix : Matrix4 = new Matrix4()) : void {
 
-    const direction = new Vector3( 1, 0, 0 );
-    
+    const direction = new Vector3();
+
+
+
     this.addEffect('twist',(vertex) => {
       const { x, y, z } = vertex;
-      vertex.set( x * 2, y, z );
-      vertex.applyAxisAngle( direction, Math.PI * x / 2 )
+
+      switch(option.direction) {
+        case 'x':
+          direction.set( 1, 0, 0 );
+          vertex.set( x * 2, y, z );
+          vertex.applyAxisAngle( direction, Math.PI * x / 2 )
+          break;
+        case 'y':
+          direction.set( 0, 1, 0 );
+          vertex.set( x, y * 2, z );
+          vertex.applyAxisAngle( direction, Math.PI * y / 2 )
+          break;
+        case 'z':
+          direction.set( 0, 0, 1 );
+          vertex.set( x, y, z * 2 );
+          vertex.applyAxisAngle( direction, Math.PI * z / 2 )
+          break;
+      }
+
+
 
       return vertex
     }, matrix)
 
   }
 
-  spherify(matrix? : Matrix4) : void { 
+  addTaper(option : TaperOption = {direction : 'x'}, matrix: Matrix4 = new Matrix4()) : void {
+
+    this.geometry.computeBoundingBox();
+
+    if(this.geometry.boundingBox === null) {
+      console.error("Geometry does not have bounding box");
+      return;
+    }
+
+    const { min, max } = this.geometry.boundingBox;
+    let sc = 0;
+
+    this.addEffect('taper', (vertex) => {
+      const { x, y, z } = vertex;
+      switch(option.direction) {
+        case 'x':
+          sc = (x - min.x) / (max.x - min.x);
+          vertex.set( x, y * sc, z * sc );
+          break;
+        case 'y':
+          sc = (y - min.y) / (max.y - min.y);
+          vertex.set( x * sc, y, z * sc );
+          break;
+        case 'z':
+          sc = (z - min.z) / (max.z - min.z);
+          vertex.set( x * sc, y * sc, z );
+          break;
+      }
+      return vertex;
+    }, matrix)
+
+  }
+
+  addSpherify(matrix : Matrix4 = new Matrix4()) : void { 
 
     this.addEffect('spherify', (vertex) => {
       const { x, y, z } = vertex;
@@ -112,25 +170,6 @@ class Deformer {
       return vertex;
     },matrix)
   }
-
-  addDeformer(name : string, matrix : Matrix4) : void {
-
-    switch(name) {
-      case 'twist':   
-        this.twist(matrix);
-        break;
-      case 'spherify':
-        this.spherify(matrix);
-        break;  
-      default:
-        console.error("Deformer does not exist");
-        break;
-    }   
-
-
-  }
-
-
 
   changeWeight(name : string, value : number) {
     
