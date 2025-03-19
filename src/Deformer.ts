@@ -55,7 +55,7 @@ class Deformer {
 
   }
 
-  addEffect(name: string, effect: EffectFunction, matrix: Matrix4 = new Matrix4()): void {
+  addEffect(name: string, effect: EffectFunction, matrix: Matrix4): void {
 
     if(this.effects[name]) {
       console.error(`Effect '${name}' already exists`);
@@ -92,21 +92,41 @@ class Deformer {
     this.changeWeight(name, beforeValue);
   }
 
-  twist(matrix? : Matrix4) : void {
+  addTwist(option : TwistOption = {direction : 'x'}, matrix : Matrix4 = new Matrix4()) : void {
 
-    const direction = new Vector3( 1, 0, 0 );
-    
+    const direction = new Vector3();
+
+
+
     this.addEffect('twist',(vertex) => {
       const { x, y, z } = vertex;
-      vertex.set( x * 2, y, z );
-      vertex.applyAxisAngle( direction, Math.PI * x / 2 )
+
+      switch(option.direction) {
+        case 'x':
+          direction.set( 1, 0, 0 );
+          vertex.set( x * 2, y, z );
+          vertex.applyAxisAngle( direction, Math.PI * x / 2 )
+          break;
+        case 'y':
+          direction.set( 0, 1, 0 );
+          vertex.set( x, y * 2, z );
+          vertex.applyAxisAngle( direction, Math.PI * y / 2 )
+          break;
+        case 'z':
+          direction.set( 0, 0, 1 );
+          vertex.set( x, y, z * 2 );
+          vertex.applyAxisAngle( direction, Math.PI * z / 2 )
+          break;
+      }
+
+
 
       return vertex
     }, matrix)
 
   }
 
-  taper(direction: 'x' | 'y' | 'z', matrix?: Matrix4) : void {
+  addTaper(option : TaperOption = {direction : 'x'}, matrix: Matrix4 = new Matrix4()) : void {
 
     this.geometry.computeBoundingBox();
 
@@ -120,7 +140,7 @@ class Deformer {
 
     this.addEffect('taper', (vertex) => {
       const { x, y, z } = vertex;
-      switch(direction) {
+      switch(option.direction) {
         case 'x':
           sc = (x - min.x) / (max.x - min.x);
           vertex.set( x, y * sc, z * sc );
@@ -139,7 +159,7 @@ class Deformer {
 
   }
 
-  spherify(matrix? : Matrix4) : void { 
+  addSpherify(matrix : Matrix4 = new Matrix4()) : void { 
 
     this.addEffect('spherify', (vertex) => {
       const { x, y, z } = vertex;
@@ -150,28 +170,6 @@ class Deformer {
       return vertex;
     },matrix)
   }
-
-  addDeformer(name : string, matrix : Matrix4) : void {
-
-    switch(name) {
-      case 'twist':   
-        this.twist(matrix);
-        break;
-      case 'spherify':
-        this.spherify(matrix);
-        break;
-      case 'taper':
-        this.taper('x', matrix); 
-        break; 
-      default:
-        console.error("Deformer does not exist");
-        break;
-    }   
-
-
-  }
-
-
 
   changeWeight(name : string, value : number) {
     

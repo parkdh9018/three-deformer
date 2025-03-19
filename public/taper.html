@@ -59,7 +59,7 @@
 				mesh = new THREE.Mesh( geometry, material );
 
 				deformer = new Deformer(mesh);
-				deformer.addDeformer('taper');
+				deformer.addTaper({direction : 'x'});
 				deformer.apply();
 
 				scene.add( mesh );
