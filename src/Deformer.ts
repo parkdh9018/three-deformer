@@ -6,6 +6,7 @@ type Effect = {
   index : number,
   matrix : Matrix4,
   effect : EffectFunction,
+  option : EffectOption
 };
 class Deformer {
 
@@ -55,14 +56,14 @@ class Deformer {
 
   }
 
-  addEffect(name: string, effect: EffectFunction, matrix: Matrix4): void {
+  addEffect(name: string, effect: EffectFunction, option : EffectOption, matrix: Matrix4): void {
 
     if(this.effects[name]) {
       console.error(`Effect '${name}' already exists`);
       return;
     }
 
-    this.effects[name] = { index : Object.keys(this.effects).length, effect, matrix };
+    this.effects[name] = { index : Object.keys(this.effects).length, option, effect, matrix };
   }
   
   removeEffect(name : string) : void {
@@ -78,25 +79,48 @@ class Deformer {
 
     this.effects[name].matrix = matrix;
 
-    let beforeValue = 0;
-    
+    let weight = 0;
     if(this.mesh.morphTargetInfluences) {
-      beforeValue = this.mesh.morphTargetInfluences[0];
+      weight = this.mesh.morphTargetInfluences[0];
     }
     
     const tempGeometry = this.geometry.clone();
-    
     this.mesh.geometry = tempGeometry;
+    
     this.apply();
 
-    this.changeWeight(name, beforeValue);
+    this.changeWeight(name, weight);
+  }
+
+  setOption(name : EffectType, option : EffectOption) : void {
+
+    if(!this.effects[name]) {
+      console.error("Effect does not exist");
+      return;
+    }
+
+    let weight = 0;
+    if(this.mesh.morphTargetInfluences) {
+      weight = this.mesh.morphTargetInfluences[0];
+    }
+    
+    const tempGeometry = this.geometry.clone();
+    this.mesh.geometry = tempGeometry;
+    
+    const matrix = this.effects[name].matrix;
+
+    this.removeEffect(name)
+    this.addDeformer(name, option, matrix);
+
+    this.applyDeformers(tempGeometry);
+    this.mesh.updateMorphTargets();
+    
+    this.changeWeight(name, weight);
   }
 
   addTwist(option : TwistOption = {direction : 'x'}, matrix : Matrix4 = new Matrix4()) : void {
 
     const direction = new Vector3();
-
-
 
     this.addEffect('twist',(vertex) => {
       const { x, y, z } = vertex;
@@ -119,10 +143,8 @@ class Deformer {
           break;
       }
 
-
-
       return vertex
-    }, matrix)
+    }, option, matrix)
 
   }
 
@@ -155,11 +177,11 @@ class Deformer {
           break;
       }
       return vertex;
-    }, matrix)
+    }, option, matrix)
 
   }
 
-  addSpherify(matrix : Matrix4 = new Matrix4()) : void { 
+  addSpherify(option : SpherifyOption = {}, matrix : Matrix4 = new Matrix4()) : void { 
 
     this.addEffect('spherify', (vertex) => {
       const { x, y, z } = vertex;
@@ -168,8 +190,34 @@ class Deformer {
         y * Math.sqrt( 1 - ( z * z / 2 ) - ( x * x / 2 ) + ( z * z * x * x / 3 ) ),
         z * Math.sqrt( 1 - ( x * x / 2 ) - ( y * y / 2 ) + ( x * x * y * y / 3 ) ))
       return vertex;
-    },matrix)
+    }, option, matrix)
   }
+
+  protected addDeformer<T extends EffectType>(name : T, option : EffectOption, matrix : Matrix4) : void {
+
+    switch(name) {
+      case 'twist':   {
+        this.addTwist(option as TwistOption, matrix);
+        break;
+      }
+      case 'spherify': {
+        this.addSpherify(matrix);
+        break;
+      }
+      case 'taper': {
+        this.addTaper(option as TaperOption,matrix); 
+        break; 
+      }
+      default: {
+        console.error("Deformer does not exist");
+        break;
+      }
+    }   
+
+
+  }
+
+
 
   changeWeight(name : string, value : number) {
     
