@@ -99,6 +99,7 @@
 				const params = {
 					taper: 0,
 					axis : 'x',
+					curveType: 'linear',
 					position : {
 						x: 0,
 						y: 0,
@@ -124,7 +125,11 @@
 				} );
 
 				gui.add(params, 'axis', ['x', 'y', 'z']).onChange(function (value) {
-					deformer.setOption('taper', { direction : value});
+					deformer.setOption('taper', { direction : value, curveType : params.curveType });
+				});
+
+				gui.add(params, 'curveType', ['linear', 'quadratic', 'sin', 'cubic']).onChange(function (value) {
+					deformer.setOption('taper', { direction : params.axis, curveType : value});
 				});
 
 				const folder = gui.addFolder( 'Position' );

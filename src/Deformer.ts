@@ -148,36 +148,67 @@ class Deformer {
 
   }
 
-  addTaper(option : TaperOption = {direction : 'x'}, matrix: Matrix4 = new Matrix4()) : void {
-
+  addTaper(option: TaperOption = { direction: 'x', curveType: 'linear' }, matrix: Matrix4 = new Matrix4()): void {
     this.geometry.computeBoundingBox();
 
-    if(this.geometry.boundingBox === null) {
-      console.error("Geometry does not have bounding box");
-      return;
+    if (this.geometry.boundingBox === null) {
+        console.error("Geometry does not have bounding box");
+        return;
     }
 
     const { min, max } = this.geometry.boundingBox;
-    let sc = 0;
+    const rangeX = max.x - min.x || 1;
+    const rangeY = max.y - min.y || 1;
+    const rangeZ = max.z - min.z || 1;
 
     this.addEffect('taper', (vertex) => {
-      const { x, y, z } = vertex;
-      switch(option.direction) {
-        case 'x':
-          sc = (x - min.x) / (max.x - min.x);
-          vertex.set( x, y * sc, z * sc );
-          break;
-        case 'y':
-          sc = (y - min.y) / (max.y - min.y);
-          vertex.set( x * sc, y, z * sc );
-          break;
-        case 'z':
-          sc = (z - min.z) / (max.z - min.z);
-          vertex.set( x * sc, y * sc, z );
-          break;
-      }
-      return vertex;
-    }, option, matrix)
+        const { x, y, z } = vertex;
+        let sc = 1, t = 0;
+
+        switch (option.direction) {
+            case 'x':
+            default:
+                t = (x - min.x) / rangeX;
+                break;
+            case 'y':
+                t = (y - min.y) / rangeY;
+                break;
+            case 'z':
+                t = (z - min.z) / rangeZ;
+                break;
+        }
+
+        switch (option.curveType) {
+            case 'quadratic': 
+                sc = t * t;
+                break;
+            case 'sin': 
+                sc = Math.sin(t * Math.PI / 2);
+                break;
+            case 'cubic': 
+                sc = t * t * (3 - 2 * t);
+                break;
+            case 'linear':
+            default: 
+                sc = t;
+                break;
+        }
+
+        switch (option.direction) {
+            case 'x':
+                vertex.set(x, y * sc, z * sc);
+                break;
+            case 'y':
+                vertex.set(x * sc, y, z * sc);
+                break;
+            case 'z':
+                vertex.set(x * sc, y * sc, z);
+                break;
+        }
+
+        vertex.applyMatrix4(matrix);
+        return vertex;
+    }, option, matrix);
 
   }
 

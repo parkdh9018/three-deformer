@@ -6,6 +6,7 @@ interface TwistOption {
 
 interface TaperOption {
     direction : DirectionType
+    curveType :  'linear' | 'quadratic' | 'sin' | 'cubic'
 }
 
 interface SpherifyOption {
