@@ -70,14 +70,12 @@ class Deformer {
     delete this.effects[name];
   }
 
-  transform(name : string, matrix : Matrix4) : void {
+  transform(name : EffectType, matrix : Matrix4) : void {
 
     if(!this.effects[name]) {
       console.error("Effect does not exist");
       return;
     }
-
-    this.effects[name].matrix = matrix;
 
     let weight = 0;
     if(this.mesh.morphTargetInfluences) {
@@ -86,8 +84,14 @@ class Deformer {
     
     const tempGeometry = this.geometry.clone();
     this.mesh.geometry = tempGeometry;
+
+    const option = this.effects[name].option;
     
-    this.apply();
+    this.removeEffect(name)
+    this.addDeformer(name, option, matrix);
+
+    this.applyDeformers(tempGeometry);
+    this.mesh.updateMorphTargets();
 
     this.changeWeight(name, weight);
   }
@@ -193,7 +197,7 @@ class Deformer {
               sc = option.invert ? (1 - t) : t;
               break;
         }
-        
+
         switch (option.direction) {
             case 'x':
                 vertex.set(x, y * sc, z * sc);
