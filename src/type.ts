@@ -6,6 +6,7 @@ interface TwistOption {
 
 interface TaperOption {
     direction : DirectionType
+    invert : boolean
     curveType :  'linear' | 'quadratic' | 'sin' | 'cubic'
 }
 

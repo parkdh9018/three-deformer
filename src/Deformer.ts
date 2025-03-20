@@ -148,7 +148,7 @@ class Deformer {
 
   }
 
-  addTaper(option: TaperOption = { direction: 'x', curveType: 'linear' }, matrix: Matrix4 = new Matrix4()): void {
+  addTaper(option: TaperOption = { direction: 'x', invert : false, curveType: 'linear' }, matrix: Matrix4 = new Matrix4()): void {
     this.geometry.computeBoundingBox();
 
     if (this.geometry.boundingBox === null) {
@@ -179,21 +179,21 @@ class Deformer {
         }
 
         switch (option.curveType) {
-            case 'quadratic': 
-                sc = t * t;
-                break;
-            case 'sin': 
-                sc = Math.sin(t * Math.PI / 2);
-                break;
-            case 'cubic': 
-                sc = t * t * (3 - 2 * t);
-                break;
-            case 'linear':
-            default: 
-                sc = t;
-                break;
+          case 'quadratic': 
+              sc = Math.pow(option.invert ? (1 - t) : t, 2);
+              break;
+          case 'sin': 
+              sc = Math.sin((option.invert ? (1 - t) : t) * Math.PI / 2);
+              break;
+          case 'cubic': 
+              sc = Math.pow(option.invert ? (1 - t) : t, 2) * (3 - 2 * (option.invert ? (1 - t) : t));
+              break;
+          case 'linear':
+          default: 
+              sc = option.invert ? (1 - t) : t;
+              break;
         }
-
+        
         switch (option.direction) {
             case 'x':
                 vertex.set(x, y * sc, z * sc);
