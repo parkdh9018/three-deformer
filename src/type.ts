@@ -2,6 +2,7 @@ type DirectionType = 'x' | 'y' | 'z';
 
 interface TwistOption {
     direction : DirectionType
+    invert : boolean
 }
 
 interface TaperOption {

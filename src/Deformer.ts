@@ -122,7 +122,7 @@ class Deformer {
     this.changeWeight(name, weight);
   }
 
-  addTwist(option : TwistOption = {direction : 'x'}, matrix : Matrix4 = new Matrix4()) : void {
+  addTwist(option : TwistOption = {direction : 'x', invert : false}, matrix : Matrix4 = new Matrix4()) : void {
 
     const direction = new Vector3();
 
@@ -132,16 +132,27 @@ class Deformer {
       switch(option.direction) {
         case 'x':
           direction.set( 1, 0, 0 );
+          break;
+        case 'y':
+          direction.set( 0, 1, 0 );
+          break;
+        case 'z':
+          direction.set( 0, 0, 1 );
+          break;
+      }
+
+      if (option.invert) direction.multiplyScalar(-1);
+
+      switch(option.direction) {
+        case 'x':
           vertex.set( x * 2, y, z );
           vertex.applyAxisAngle( direction, Math.PI * x / 2 )
           break;
         case 'y':
-          direction.set( 0, 1, 0 );
           vertex.set( x, y * 2, z );
           vertex.applyAxisAngle( direction, Math.PI * y / 2 )
           break;
         case 'z':
-          direction.set( 0, 0, 1 );
           vertex.set( x, y, z * 2 );
           vertex.applyAxisAngle( direction, Math.PI * z / 2 )
           break;
