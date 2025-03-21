@@ -98,6 +98,8 @@
 				// Set up dat.GUI to control targets
 				const params = {
 					twist: 0,
+					axis : 'x',
+					invert : false,
 					position : {
 						x: 0,
 						y: 0,
@@ -121,6 +123,14 @@
 					deformer.changeWeight('twist', value)
 
 				} );
+
+				gui.add(params, 'axis', ['x', 'y', 'z']).onChange(function (value) {
+					deformer.setOption('twist', { direction : value, invert : params.invert });
+				});
+
+				gui.add(params, 'invert', [true, false]).onChange(function (value) {
+					deformer.setOption('twist', { direction : params.axis, invert : value });
+				});
 
 				const folder = gui.addFolder( 'Position' );
 				folder.add( params.position, 'x', -3, 3 ).step(0.01).onChange( function ( value ) {
