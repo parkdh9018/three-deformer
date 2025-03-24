@@ -4,6 +4,7 @@
     "version": "0.0.1",
     "workspaces": ["packages/*", "examples/*"],
     "scripts": {
-        "lib": "pnpm --filter three-deformer"
+        "lib": "pnpm --filter three-deformer",
+        "dev:ex": "pnpm --filter three-deformer-example run dev"
     }
 }  
