@@ -1,0 +1,9 @@
+{
+    "name": "three-deformer-repo",
+    "private": true,
+    "version": "0.0.1",
+    "workspaces": ["packages/*", "examples/*"],
+    "scripts": {
+        "lib": "pnpm --filter three-deformer"
+    }
+}  
