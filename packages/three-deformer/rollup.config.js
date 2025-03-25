@@ -8,14 +8,15 @@ import terser from '@rollup/plugin-terser';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import json from '@rollup/plugin-json';
+import dts from 'rollup-plugin-dts'
 
 const isProduction = !process.env.ROLLUP_WATCH;
 
-export default {
+export default [{
     input: 'src/index.ts',
     output: [
         { file: 'dist/bundle.cjs.js', format: 'cjs', sourcemap : true },
-        { file: 'dist/bundle.esm.js', format: 'esm', sourcemap : true }
+        { file: 'dist/bundle.esm.js', format: 'esm', sourcemap : true },
     ],
     external: ['three'],
     plugins: [
@@ -39,4 +40,10 @@ export default {
         }),
         !isProduction && livereload('dist'),
     ]
-};
+},
+{
+    input: "src/index.ts",
+    output: [{ file: "dist/index.d.ts", format: "es" }],
+    plugins: [dts()],
+},
+];
