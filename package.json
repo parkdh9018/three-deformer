@@ -1,42 +1,11 @@
 {
-    "name": "path-navigator",
-    "version": "1.0.0",
-    "description": "",
-    "main": "dist/bundle.cjs.js",
-    "module": "dist/bundle.esm.js",
-    "type": "module",
+    "name": "three-deformer-repo",
+    "private": true,
+    "version": "0.0.1",
+    "workspaces": ["packages/*", "examples/*"],
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "dev": "rollup -c -w",
-        "build": "rollup -c",
-        "watch": "rollup -cw"
-    },
-    "keywords": [],
-    "author": "Donghwan park <parkdh9018@naver.com>",
-    "license": "ISC",
-    "devDependencies": {
-        "@babel/core": "^7.26.0",
-        "@babel/preset-env": "^7.26.0",
-        "@rollup/plugin-babel": "^6.0.4",
-        "@rollup/plugin-commonjs": "^28.0.1",
-        "@rollup/plugin-json": "^6.1.0",
-        "@rollup/plugin-node-resolve": "^15.3.0",
-        "@rollup/plugin-terser": "^0.4.4",
-        "@rollup/plugin-typescript": "^12.1.1",
-        "@types/three": "^0.174.0",
-        "@typescript-eslint/eslint-plugin": "^8.18.1",
-        "@typescript-eslint/parser": "^8.18.1",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-plugin-prettier": "^5.2.1",
-        "prettier": "^3.4.2",
-        "rollup": "^4.28.1",
-        "rollup-plugin-delete": "^3.0.1",
-        "rollup-plugin-livereload": "^2.0.5",
-        "rollup-plugin-serve": "^1.1.1",
-        "typescript": "^5.7.2",
-        "typescript-eslint": "^8.18.1"
-    },
-    "peerDependencies": {
-        "three": "^0.174.0"
+        "build" : "pnpm --filter three-deformer run build",
+        "lib": "pnpm --filter three-deformer run dev",
+        "dev": "pnpm --filter three-deformer-example run dev"
     }
-}
+}  
