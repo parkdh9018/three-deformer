@@ -15,12 +15,12 @@ const isProduction = !process.env.ROLLUP_WATCH;
 export default [{
     input: 'src/index.ts',
     output: [
-        { file: 'dist/bundle.cjs.js', format: 'cjs', sourcemap : true },
-        { file: 'dist/bundle.esm.js', format: 'esm', sourcemap : true },
+        { file: 'dist/bundle.cjs.js', format: 'cjs', sourcemap: !isProduction },
+        { file: 'dist/bundle.esm.js', format: 'esm', sourcemap: !isProduction },
     ],
     external: ['three'],
     plugins: [
-        del( { targets: 'dist/*' } ),
+        del({ targets: 'dist/*' }),
         json(),
         resolve({
             extensions: ['.js', '.ts']
