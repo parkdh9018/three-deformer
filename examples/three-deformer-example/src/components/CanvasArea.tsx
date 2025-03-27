@@ -1,7 +1,9 @@
-import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { DeformerController } from './DeformerController';
 import { Deformer } from 'three-deformer';
+import * as S from './CanvasArea.styled';
+import { useRecoilValue } from 'recoil';
+import { selectedDeformerState } from '../state/atoms/deformerAtom';
 
 export const CanvasArea = () => {
   const geometry = new THREE.BoxGeometry(2, 2, 2, 32, 32, 32);
@@ -10,20 +12,18 @@ export const CanvasArea = () => {
     flatShading: true,
   });
 
+  const selected = useRecoilValue(selectedDeformerState);
   const mesh = new THREE.Mesh(geometry, material);
   const deformer = new Deformer(mesh);
 
-  deformer.addTwist();
+  deformer.addDeformer(selected);
   deformer.apply();
 
   return (
-    <Canvas
-      style={{ width: '100vw', height: '100vh' }}
-      camera={{ position: [2, 2, 5], fov: 60 }}
-    >
+    <S.StyledCanvas camera={{ position: [2, 2, 5], fov: 60 }}>
       <ambientLight />
       <directionalLight position={[3, 3, 3]} />
-      <DeformerController mesh={mesh} deformer={deformer} />
-    </Canvas>
+      <DeformerController name={selected} mesh={mesh} deformer={deformer} />
+    </S.StyledCanvas>
   );
 };

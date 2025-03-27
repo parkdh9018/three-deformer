@@ -4,44 +4,24 @@ import * as THREE from 'three';
 import { Deformer } from 'three-deformer';
 
 type Props = {
+  name: string;
   mesh: THREE.Mesh;
   deformer: Deformer;
 };
 
-export const DeformerController = ({ mesh, deformer }: Props) => {
+export const DeformerController = ({ name, mesh, deformer }: Props) => {
   const _matrix = new THREE.Matrix4();
   const _position = new THREE.Vector3();
   const _rotation = new THREE.Quaternion();
   const _euler = new THREE.Euler();
   const _scale = new THREE.Vector3();
 
+  // Weight
   const onChangeWeight = (value: number) => {
-    deformer.changeWeight('twist', value);
+    deformer.changeWeight(name, value);
   };
 
-  const onChangePosition = (value: { x: number; y: number; z: number }) => {
-    _matrix.decompose(_position, _rotation, _scale);
-    _position.set(value.x, value.y, value.z);
-    _matrix.compose(_position, _rotation, _scale);
-    deformer.transform('twist', _matrix);
-  };
-
-  const onChangeRotation = (value: { x: number; y: number; z: number }) => {
-    _matrix.decompose(_position, _rotation, _scale);
-    _euler.set(value.x, value.y, value.z);
-    _rotation.setFromEuler(_euler);
-    _matrix.compose(_position, _rotation, _scale);
-    deformer.transform('twist', _matrix);
-  };
-
-  const onChangeScale = (value: { x: number; y: number; z: number }) => {
-    _matrix.decompose(_position, _rotation, _scale);
-    _scale.set(value.x, value.y, value.z);
-    _matrix.compose(_position, _rotation, _scale);
-    deformer.transform('twist', _matrix);
-  };
-
-  const { axis, invert } = useControls({
+  useControls({
     weight: {
       value: 0,
       min: 0,
@@ -49,9 +29,40 @@ export const DeformerController = ({ mesh, deformer }: Props) => {
       step: 0.01,
       onChange: onChangeWeight,
     },
+  });
+
+  // Option
+  const { axis, invert } = useControls({
     axis: { value: 'x', options: ['x', 'y', 'z'] },
     invert: { value: true, options: [true, false] },
   });
+
+  useEffect(() => {
+    deformer.setOption(name, { direction: axis, invert: invert });
+  }, [axis, invert]);
+
+  // Matrix
+  const onChangePosition = (value: { x: number; y: number; z: number }) => {
+    _matrix.decompose(_position, _rotation, _scale);
+    _position.set(value.x, value.y, value.z);
+    _matrix.compose(_position, _rotation, _scale);
+    deformer.transform(name, _matrix);
+  };
+
+  const onChangeRotation = (value: { x: number; y: number; z: number }) => {
+    _matrix.decompose(_position, _rotation, _scale);
+    _euler.set(value.x, value.y, value.z);
+    _rotation.setFromEuler(_euler);
+    _matrix.compose(_position, _rotation, _scale);
+    deformer.transform(name, _matrix);
+  };
+
+  const onChangeScale = (value: { x: number; y: number; z: number }) => {
+    _matrix.decompose(_position, _rotation, _scale);
+    _scale.set(value.x, value.y, value.z);
+    _matrix.compose(_position, _rotation, _scale);
+    deformer.transform(name, _matrix);
+  };
 
   useControls('Matrix', {
     position: {
@@ -71,10 +82,6 @@ export const DeformerController = ({ mesh, deformer }: Props) => {
       onChange: onChangeScale,
     },
   });
-
-  useEffect(() => {
-    deformer.setOption('twist', { direction: axis, invert: invert });
-  }, [axis, invert]);
 
   return <primitive object={mesh} />;
 };

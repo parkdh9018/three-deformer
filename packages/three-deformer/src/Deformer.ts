@@ -279,10 +279,10 @@ class Deformer {
     );
   }
 
-  protected addDeformer<T extends EffectType>(
+  addDeformer<T extends EffectType>(
     name: T,
-    option: EffectOption,
-    matrix: Matrix4,
+    option?: EffectOption,
+    matrix?: Matrix4,
   ): void {
     switch (name) {
       case 'twist': {
