@@ -1,13 +1,12 @@
-import './App.css'
-import { CanvasArea } from './components/CanvasArea'
+import './App.css';
+import { CanvasArea } from './components/CanvasArea';
 
 function App() {
-
   return (
     <>
-      <CanvasArea/>
+      <CanvasArea />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
