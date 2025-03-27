@@ -21,7 +21,6 @@ class Deformer {
   constructor(mesh: Mesh) {
     this.mesh = mesh;
     this.geometry = mesh.geometry;
-    this.geometry.morphAttributes.position = [];
     this.effects = {};
   }
 
@@ -31,13 +30,16 @@ class Deformer {
   }
 
   applyDeformers(geometry: BufferGeometry): void {
-    geometry.morphAttributes.position = [];
-
-    const positionAttribute = geometry.attributes.position;
     const positionList = Array.from(
       { length: Object.keys(this.effects).length },
       () => [],
     );
+
+    if (positionList.length === 0) return;
+
+    geometry.morphAttributes.position = [];
+
+    const positionAttribute = geometry.attributes.position;
 
     for (let i = 0; i < positionAttribute.count; i++) {
       const x = positionAttribute.getX(i);
@@ -59,6 +61,8 @@ class Deformer {
         new Float32BufferAttribute(positionList[i], 3),
       );
     }
+
+    this.mesh.updateMorphTargets();
   }
 
   addEffect(
@@ -68,8 +72,7 @@ class Deformer {
     matrix: Matrix4,
   ): void {
     if (this.effects[name]) {
-      console.error(`Effect '${name}' already exists`);
-      return;
+      throw new Error(`[three-deformer] Effect '${name}' already exists`);
     }
 
     this.effects[name] = {
@@ -86,8 +89,7 @@ class Deformer {
 
   transform(name: EffectType, matrix: Matrix4): void {
     if (!this.effects[name]) {
-      console.error('Effect does not exist');
-      return;
+      throw new Error('[three-deformer] Effect does not exist');
     }
 
     let weight = 0;
@@ -111,8 +113,7 @@ class Deformer {
 
   setOption(name: EffectType, option: EffectOption): void {
     if (!this.effects[name]) {
-      console.error('Effect does not exist');
-      return;
+      throw new Error('[three-deformer] Effect does not exist');
     }
 
     let weight = 0;
@@ -192,8 +193,7 @@ class Deformer {
     this.geometry.computeBoundingBox();
 
     if (this.geometry.boundingBox === null) {
-      console.error('Geometry does not have bounding box');
-      return;
+      throw new Error('[three-deformer] Geometry does not have bounding box');
     }
 
     const { min, max } = this.geometry.boundingBox;
@@ -298,23 +298,22 @@ class Deformer {
         break;
       }
       default: {
-        console.error('Deformer does not exist');
-        break;
+        throw new Error('[three-deformer] Deformer does not exist');
       }
     }
   }
 
   changeWeight(name: string, value: number) {
-    if (!this.mesh.morphTargetInfluences) {
-      console.error('Mesh does not have morphTargetInfluences');
-      return;
+    const index = this.effects[name]?.index ?? -1;
+
+    if (index === -1) {
+      throw new Error('[three-deformer] Effect does not exist');
     }
 
-    const index = this.effects[name].index;
-
-    if (index === undefined) {
-      console.error('Effect does not exist');
-      return;
+    if (!this.mesh.morphTargetInfluences) {
+      throw new Error(
+        `[three-deformer] Mesh does not have morphTargetInfluences. Make sure to call 'apply()' before using this deformer.`,
+      );
     }
 
     this.mesh.morphTargetInfluences[index] = value;
