@@ -1,24 +1,24 @@
 type DirectionType = 'x' | 'y' | 'z';
 
 interface TwistOption {
-    direction : DirectionType
-    invert : boolean
+  direction: DirectionType;
+  invert: boolean;
 }
 
 interface TaperOption {
-    direction : DirectionType
-    invert : boolean
-    curveType :  'linear' | 'quadratic' | 'sin' | 'cubic'
+  direction: DirectionType;
+  invert: boolean;
+  curveType: 'linear' | 'quadratic' | 'sin' | 'cubic';
 }
 
 interface SpherifyOption {
-    // empty
+  // empty
 }
 
 interface EffectOptionMap {
-    twist : TwistOption
-    taper : TaperOption
-    spherify : SpherifyOption
+  twist: TwistOption;
+  taper: TaperOption;
+  spherify: SpherifyOption;
 }
 
 type EffectType = keyof EffectOptionMap;

@@ -1,0 +1,11 @@
+#root {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-areas:
+      "sidebar viewer viewer viewer viewer"
+      "sidebar viewer viewer viewer viewer"
+      "sidebar viewer viewer viewer viewer";
+}
