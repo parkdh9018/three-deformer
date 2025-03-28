@@ -20,6 +20,16 @@ export const CanvasArea = () => {
   deformer.addDeformer(selected);
   deformer.apply();
 
+  const TaperOption = {
+    curveType: {
+      options: ['linear', 'quadratic', 'sin', 'cubic'],
+      value: 'linear',
+      onChange: (value: string) => {
+        deformer.setOption(selected, { curveType: value });
+      },
+    },
+  };
+
   return (
     <S.StyledCanvas camera={{ position: [2, 2, 5], fov: 60 }}>
       <ambientLight />
@@ -28,7 +38,12 @@ export const CanvasArea = () => {
         <DeformerController name={selected} mesh={mesh} deformer={deformer} />
       )}
       {selected === 'taper' && (
-        <DeformerController name={selected} mesh={mesh} deformer={deformer} />
+        <DeformerController
+          name={selected}
+          mesh={mesh}
+          deformer={deformer}
+          option={TaperOption}
+        />
       )}
     </S.StyledCanvas>
   );

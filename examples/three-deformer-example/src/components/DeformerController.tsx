@@ -6,9 +6,15 @@ type Props = {
   name: string;
   mesh: THREE.Mesh;
   deformer: Deformer;
+  option?: object;
 };
 
-export const DeformerController = ({ name, mesh, deformer }: Props) => {
+export const DeformerController = ({
+  name,
+  option = {},
+  mesh,
+  deformer,
+}: Props) => {
   const _matrix = new THREE.Matrix4();
   const _position = new THREE.Vector3();
   const _rotation = new THREE.Quaternion();
@@ -29,6 +35,9 @@ export const DeformerController = ({ name, mesh, deformer }: Props) => {
       onChange: onChangeWeight,
     },
   });
+
+  // Option
+  useControls('Option', option);
 
   // Axis
   const onChangeAxis = (value: number) => {
