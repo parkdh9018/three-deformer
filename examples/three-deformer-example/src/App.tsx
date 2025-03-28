@@ -1,10 +1,11 @@
-import './App.css';
-import { CanvasArea } from './components/CanvasArea';
+import { Sidebar } from './components/Sidebar';
+import { Viewer } from './components/Viewer';
 
 function App() {
   return (
     <>
-      <CanvasArea />
+      <Sidebar />
+      <Viewer />
     </>
   );
 }
