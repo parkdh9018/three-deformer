@@ -1,5 +1,4 @@
 import { useControls } from 'leva';
-import { useEffect } from 'react';
 import * as THREE from 'three';
 import { Deformer } from 'three-deformer';
 
@@ -31,15 +30,26 @@ export const DeformerController = ({ name, mesh, deformer }: Props) => {
     },
   });
 
-  // Option
-  const { axis, invert } = useControls({
-    axis: { value: 'x', options: ['x', 'y', 'z'] },
-    invert: { value: true, options: [true, false] },
-  });
+  // Axis
+  const onChangeAxis = (value: number) => {
+    deformer.setOption(name, { direction: value });
+  };
+  const onChangeInvert = (value: number) => {
+    deformer.setOption(name, { invert: value });
+  };
 
-  useEffect(() => {
-    deformer.setOption(name, { direction: axis, invert: invert });
-  }, [axis, invert]);
+  useControls('Axis', {
+    axis: {
+      value: 'x',
+      options: ['x', 'y', 'z'],
+      onChange: onChangeAxis,
+    },
+    invert: {
+      value: false,
+      options: [true, false],
+      onChange: onChangeInvert,
+    },
+  });
 
   // Matrix
   const onChangePosition = (value: { x: number; y: number; z: number }) => {

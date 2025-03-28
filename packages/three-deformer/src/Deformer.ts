@@ -13,6 +13,7 @@ type Effect = {
   effect: EffectFunction;
   option: EffectOption;
 };
+
 class Deformer {
   mesh: Mesh;
   geometry: BufferGeometry;
@@ -88,7 +89,8 @@ class Deformer {
   }
 
   transform(name: EffectType, matrix: Matrix4): void {
-    if (!this.effects[name]) {
+    const effect = this.effects[name];
+    if (!effect) {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
@@ -100,10 +102,10 @@ class Deformer {
     const tempGeometry = this.geometry.clone();
     this.mesh.geometry = tempGeometry;
 
-    const option = this.effects[name].option;
+    effect.matrix = matrix;
 
     this.removeEffect(name);
-    this.addDeformer(name, option, matrix);
+    this.addDeformer(name, effect.option, matrix);
 
     this.applyDeformers(tempGeometry);
     this.mesh.updateMorphTargets();
@@ -111,8 +113,9 @@ class Deformer {
     this.changeWeight(name, weight);
   }
 
-  setOption(name: EffectType, option: EffectOption): void {
-    if (!this.effects[name]) {
+  setOption(name: EffectType, value: Partial<EffectOption>): void {
+    const effect = this.effects[name];
+    if (!effect) {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
@@ -124,10 +127,10 @@ class Deformer {
     const tempGeometry = this.geometry.clone();
     this.mesh.geometry = tempGeometry;
 
-    const matrix = this.effects[name].matrix;
+    effect.option = { ...effect.option, ...value };
 
     this.removeEffect(name);
-    this.addDeformer(name, option, matrix);
+    this.addDeformer(name, effect.option, effect.matrix);
 
     this.applyDeformers(tempGeometry);
     this.mesh.updateMorphTargets();
