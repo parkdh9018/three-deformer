@@ -45,6 +45,9 @@ export const CanvasArea = () => {
           option={TaperOption}
         />
       )}
+      {selected === 'bend' && (
+        <DeformerController name={selected} mesh={mesh} deformer={deformer} />
+      )}
     </S.StyledCanvas>
   );
 };

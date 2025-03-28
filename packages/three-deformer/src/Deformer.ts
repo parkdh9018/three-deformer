@@ -262,25 +262,95 @@ class Deformer {
     );
   }
 
-  addSpherify(
-    option: SpherifyOption = {},
+  addBend(
+    option: EffectOption = {
+      direction: 'x',
+      invert: false,
+    },
     matrix: Matrix4 = new Matrix4(),
   ): void {
+    this.geometry.computeBoundingBox();
+
+    if (this.geometry.boundingBox === null) {
+      throw new Error('[three-deformer] Geometry does not have bounding box');
+    }
+
+    const invert = option.invert ? -1 : 1;
+    const { min, max } = this.geometry.boundingBox;
+    const center = new Vector3();
+    this.geometry.boundingBox.getCenter(center);
+
     this.addEffect(
-      'spherify',
+      'bend',
       vertex => {
         const { x, y, z } = vertex;
-        vertex.set(
-          x * Math.sqrt(1 - (y * y) / 2 - (z * z) / 2 + (y * y * z * z) / 3),
-          y * Math.sqrt(1 - (z * z) / 2 - (x * x) / 2 + (z * z * x * x) / 3),
-          z * Math.sqrt(1 - (x * x) / 2 - (y * y) / 2 + (x * x * y * y) / 3),
-        );
+        let a = 0,
+          b = 0,
+          sc = 0;
+        let R = 0,
+          theta = 0;
+
+        switch (option.direction) {
+          case 'y': {
+            a = x - center.x;
+            b = z - center.z;
+            sc = (x - min.x) / (max.x - min.x);
+            R = Math.sqrt(a * a + b * b);
+            theta = Math.atan2(b, a) + sc * invert;
+            vertex.set(R * Math.cos(theta), y, R * Math.sin(theta));
+            break;
+          }
+
+          case 'x': {
+            a = y - center.y;
+            b = z - center.z;
+            sc = (y - min.y) / (max.y - min.y);
+            R = Math.sqrt(a * a + b * b);
+            theta = Math.atan2(b, a) + sc * invert;
+            vertex.set(x, R * Math.cos(theta), R * Math.sin(theta));
+            break;
+          }
+
+          case 'z': {
+            a = x - center.x;
+            b = y - center.y;
+            sc = (x - min.x) / (max.x - min.x);
+            R = Math.sqrt(a * a + b * b);
+            theta = Math.atan2(b, a) + sc * invert;
+            vertex.set(R * Math.cos(theta), R * Math.sin(theta), z);
+            break;
+          }
+
+          default:
+            console.warn(`[three-deformer] Unknown axis: ${option.direction}`);
+        }
+
         return vertex;
       },
       option,
       matrix,
     );
   }
+
+  // addSpherify(
+  //   option: SpherifyOption = {},
+  //   matrix: Matrix4 = new Matrix4(),
+  // ): void {
+  //   this.addEffect(
+  //     'spherify',
+  //     vertex => {
+  //       const { x, y, z } = vertex;
+  //       vertex.set(
+  //         x * Math.sqrt(1 - (y * y) / 2 - (z * z) / 2 + (y * y * z * z) / 3),
+  //         y * Math.sqrt(1 - (z * z) / 2 - (x * x) / 2 + (z * z * x * x) / 3),
+  //         z * Math.sqrt(1 - (x * x) / 2 - (y * y) / 2 + (x * x * y * y) / 3),
+  //       );
+  //       return vertex;
+  //     },
+  //     option,
+  //     matrix,
+  //   );
+  // }
 
   addDeformer<T extends EffectType>(
     name: T,
@@ -292,12 +362,12 @@ class Deformer {
         this.addTwist(option as TwistOption, matrix);
         break;
       }
-      case 'spherify': {
-        this.addSpherify(matrix);
-        break;
-      }
       case 'taper': {
         this.addTaper(option as TaperOption, matrix);
+        break;
+      }
+      case 'bend': {
+        this.addBend(option as BendOption, matrix);
         break;
       }
       default: {

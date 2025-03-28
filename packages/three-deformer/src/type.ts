@@ -11,14 +11,15 @@ interface TaperOption {
   curveType: 'linear' | 'quadratic' | 'sin' | 'cubic';
 }
 
-interface SpherifyOption {
-  // empty
+interface BendOption {
+  direction: DirectionType;
+  invert: boolean;
 }
 
 interface EffectOptionMap {
   twist: TwistOption;
   taper: TaperOption;
-  spherify: SpherifyOption;
+  bend: BendOption;
 }
 
 type EffectType = keyof EffectOptionMap;
