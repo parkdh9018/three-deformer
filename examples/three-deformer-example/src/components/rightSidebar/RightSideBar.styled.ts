@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const Wrapper = styled.div`
-  grid-area: left;
+  grid-area: right;
   background-color: rgb(85, 84, 84);
 `;
 

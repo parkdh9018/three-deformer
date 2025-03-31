@@ -17,8 +17,11 @@ export const CanvasArea = () => {
   const mesh = new THREE.Mesh(geometry, material);
 
   const deformer = new Deformer(mesh);
-  deformer.addDeformer(selected);
-  deformer.apply();
+
+  if (selected !== 'custom') {
+    deformer.addDeformer(selected);
+    deformer.apply();
+  }
 
   const twistOption = {
     strength: {
