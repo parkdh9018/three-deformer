@@ -3,6 +3,7 @@ type AxisType = 'x' | 'y' | 'z';
 interface TwistOption {
   axis: AxisType;
   invert: boolean;
+  strength: number;
 }
 
 interface TaperOption {

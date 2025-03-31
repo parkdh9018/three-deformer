@@ -139,10 +139,10 @@ class Deformer {
   }
 
   addTwist(
-    option: TwistOption = { axis: 'x', invert: false },
+    option: TwistOption = { axis: 'x', invert: true, strength: 2 },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    const axis = option.axis ?? 'x';
+    const { axis, strength } = option;
     const invert = option.invert ? -1 : 1;
 
     const direction = new Vector3();
@@ -166,15 +166,15 @@ class Deformer {
 
         switch (axis) {
           case 'x':
-            vertex.set(x, y, z);
+            vertex.set(x * strength, y, z);
             vertex.applyAxisAngle(direction, (Math.PI * x) / 2);
             break;
           case 'y':
-            vertex.set(x, y, z);
+            vertex.set(x, y * strength, z);
             vertex.applyAxisAngle(direction, (Math.PI * y) / 2);
             break;
           case 'z':
-            vertex.set(x, y, z);
+            vertex.set(x, y, z * strength);
             vertex.applyAxisAngle(direction, (Math.PI * z) / 2);
             break;
         }
@@ -187,11 +187,7 @@ class Deformer {
   }
 
   addTaper(
-    option: TaperOption = {
-      axis: 'x',
-      invert: false,
-      curveType: 'linear',
-    },
+    option: TaperOption = { axis: 'x', invert: false, curveType: 'linear' },
     matrix: Matrix4 = new Matrix4(),
   ): void {
     this.geometry.computeBoundingBox();
@@ -201,9 +197,7 @@ class Deformer {
     }
 
     const { min, max } = this.geometry.boundingBox;
-    const axis = option.axis ?? 'x';
-    const invert = option.invert ?? false;
-    const curveType = option.curveType ?? 'linear';
+    const { axis, invert, curveType } = option;
 
     const range = {
       x: max.x - min.x || 1,
@@ -286,9 +280,9 @@ class Deformer {
     const center = new Vector3();
     this.geometry.boundingBox.getCenter(center);
 
-    const axis = option.axis ?? 'x';
+    const { axis } = option;
+    const angle = (option.angle ?? 0) * (Math.PI / 180);
     const invert = option.invert ? -1 : 1;
-    const angle = (option.angle ?? 0) * (Math.PI / 180); // degrees → radians
 
     const rotationMatrix = new Matrix4();
     const inverseMatrix = new Matrix4();
