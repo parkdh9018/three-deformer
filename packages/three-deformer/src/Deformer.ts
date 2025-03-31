@@ -139,41 +139,42 @@ class Deformer {
   }
 
   addTwist(
-    option: TwistOption = { direction: 'x', invert: false },
+    option: TwistOption = { axis: 'x', invert: true, strength: 2 },
     matrix: Matrix4 = new Matrix4(),
   ): void {
+    const { axis, strength } = option;
+    const invert = option.invert ? -1 : 1;
+
     const direction = new Vector3();
+    switch (axis) {
+      case 'x':
+        direction.set(1, 0, 0);
+        break;
+      case 'y':
+        direction.set(0, 1, 0);
+        break;
+      case 'z':
+        direction.set(0, 0, 1);
+        break;
+    }
+    direction.multiplyScalar(invert);
 
     this.addEffect(
       'twist',
       vertex => {
         const { x, y, z } = vertex;
 
-        switch (option.direction) {
+        switch (axis) {
           case 'x':
-            direction.set(1, 0, 0);
-            break;
-          case 'y':
-            direction.set(0, 1, 0);
-            break;
-          case 'z':
-            direction.set(0, 0, 1);
-            break;
-        }
-
-        if (option.invert) direction.multiplyScalar(-1);
-
-        switch (option.direction) {
-          case 'x':
-            vertex.set(x * 2, y, z);
+            vertex.set(x * strength, y, z);
             vertex.applyAxisAngle(direction, (Math.PI * x) / 2);
             break;
           case 'y':
-            vertex.set(x, y * 2, z);
+            vertex.set(x, y * strength, z);
             vertex.applyAxisAngle(direction, (Math.PI * y) / 2);
             break;
           case 'z':
-            vertex.set(x, y, z * 2);
+            vertex.set(x, y, z * strength);
             vertex.applyAxisAngle(direction, (Math.PI * z) / 2);
             break;
         }
@@ -186,11 +187,7 @@ class Deformer {
   }
 
   addTaper(
-    option: TaperOption = {
-      direction: 'x',
-      invert: false,
-      curveType: 'linear',
-    },
+    option: TaperOption = { axis: 'x', invert: false, curveType: 'linear' },
     matrix: Matrix4 = new Matrix4(),
   ): void {
     this.geometry.computeBoundingBox();
@@ -200,49 +197,52 @@ class Deformer {
     }
 
     const { min, max } = this.geometry.boundingBox;
-    const rangeX = max.x - min.x || 1;
-    const rangeY = max.y - min.y || 1;
-    const rangeZ = max.z - min.z || 1;
+    const { axis, invert, curveType } = option;
+
+    const range = {
+      x: max.x - min.x || 1,
+      y: max.y - min.y || 1,
+      z: max.z - min.z || 1,
+    };
 
     this.addEffect(
       'taper',
       vertex => {
         const { x, y, z } = vertex;
-        let sc = 1,
-          t = 0;
+        let t = 0;
 
-        switch (option.direction) {
+        switch (axis) {
           case 'x':
-          default:
-            t = (x - min.x) / rangeX;
+            t = (x - min.x) / range.x;
             break;
           case 'y':
-            t = (y - min.y) / rangeY;
+            t = (y - min.y) / range.y;
             break;
           case 'z':
-            t = (z - min.z) / rangeZ;
+            t = (z - min.z) / range.z;
             break;
         }
 
-        switch (option.curveType) {
+        if (invert) t = 1 - t;
+
+        let sc = 1;
+        switch (curveType) {
           case 'quadratic':
-            sc = Math.pow(option.invert ? 1 - t : t, 2);
+            sc = Math.pow(t, 2);
             break;
           case 'sin':
-            sc = Math.sin(((option.invert ? 1 - t : t) * Math.PI) / 2);
+            sc = Math.sin((t * Math.PI) / 2);
             break;
           case 'cubic':
-            sc =
-              Math.pow(option.invert ? 1 - t : t, 2) *
-              (3 - 2 * (option.invert ? 1 - t : t));
+            sc = Math.pow(t, 2) * (3 - 2 * t);
             break;
           case 'linear':
           default:
-            sc = option.invert ? 1 - t : t;
+            sc = t;
             break;
         }
 
-        switch (option.direction) {
+        switch (axis) {
           case 'x':
             vertex.set(x, y * sc, z * sc);
             break;
@@ -262,25 +262,117 @@ class Deformer {
     );
   }
 
-  addSpherify(
-    option: SpherifyOption = {},
+  addBend(
+    option: BendOption = {
+      axis: 'x',
+      invert: false,
+      angle: 0,
+    },
     matrix: Matrix4 = new Matrix4(),
   ): void {
+    this.geometry.computeBoundingBox();
+
+    if (this.geometry.boundingBox === null) {
+      throw new Error('[three-deformer] Geometry does not have bounding box');
+    }
+
+    const { min, max } = this.geometry.boundingBox;
+    const center = new Vector3();
+    this.geometry.boundingBox.getCenter(center);
+
+    const { axis } = option;
+    const angle = (option.angle ?? 0) * (Math.PI / 180);
+    const invert = option.invert ? -1 : 1;
+
+    const rotationMatrix = new Matrix4();
+    const inverseMatrix = new Matrix4();
+
+    switch (axis) {
+      case 'x':
+        rotationMatrix.makeRotationY(angle);
+        inverseMatrix.makeRotationY(-angle);
+        break;
+      case 'y':
+        rotationMatrix.makeRotationX(angle);
+        inverseMatrix.makeRotationX(-angle);
+        break;
+      case 'z':
+        rotationMatrix.makeRotationX(angle);
+        inverseMatrix.makeRotationX(-angle);
+        break;
+    }
+
     this.addEffect(
-      'spherify',
+      'bend',
       vertex => {
+        vertex.applyMatrix4(rotationMatrix);
+
         const { x, y, z } = vertex;
-        vertex.set(
-          x * Math.sqrt(1 - (y * y) / 2 - (z * z) / 2 + (y * y * z * z) / 3),
-          y * Math.sqrt(1 - (z * z) / 2 - (x * x) / 2 + (z * z * x * x) / 3),
-          z * Math.sqrt(1 - (x * x) / 2 - (y * y) / 2 + (x * x * y * y) / 3),
-        );
+        let a = 0,
+          b = 0,
+          sc = 0;
+        let R = 0,
+          theta = 0;
+
+        switch (axis) {
+          case 'x': {
+            a = y - center.y;
+            b = z - center.z;
+            sc = (y - min.y) / (max.y - min.y);
+            R = Math.sqrt(a * a + b * b);
+            theta = Math.atan2(b, a) + sc * invert;
+            vertex.set(x, R * Math.cos(theta), R * Math.sin(theta));
+            break;
+          }
+
+          case 'y': {
+            a = x - center.x;
+            b = z - center.z;
+            sc = (x - min.x) / (max.x - min.x);
+            R = Math.sqrt(a * a + b * b);
+            theta = Math.atan2(b, a) + sc * invert;
+            vertex.set(R * Math.cos(theta), y, R * Math.sin(theta));
+            break;
+          }
+
+          case 'z': {
+            a = x - center.x;
+            b = y - center.y;
+            sc = (x - min.x) / (max.x - min.x);
+            R = Math.sqrt(a * a + b * b);
+            theta = Math.atan2(b, a) + sc * invert;
+            vertex.set(R * Math.cos(theta), R * Math.sin(theta), z);
+            break;
+          }
+        }
+
+        vertex.applyMatrix4(inverseMatrix);
         return vertex;
       },
       option,
       matrix,
     );
   }
+
+  // addSpherify(
+  //   option: SpherifyOption = {},
+  //   matrix: Matrix4 = new Matrix4(),
+  // ): void {
+  //   this.addEffect(
+  //     'spherify',
+  //     vertex => {
+  //       const { x, y, z } = vertex;
+  //       vertex.set(
+  //         x * Math.sqrt(1 - (y * y) / 2 - (z * z) / 2 + (y * y * z * z) / 3),
+  //         y * Math.sqrt(1 - (z * z) / 2 - (x * x) / 2 + (z * z * x * x) / 3),
+  //         z * Math.sqrt(1 - (x * x) / 2 - (y * y) / 2 + (x * x * y * y) / 3),
+  //       );
+  //       return vertex;
+  //     },
+  //     option,
+  //     matrix,
+  //   );
+  // }
 
   addDeformer<T extends EffectType>(
     name: T,
@@ -292,12 +384,12 @@ class Deformer {
         this.addTwist(option as TwistOption, matrix);
         break;
       }
-      case 'spherify': {
-        this.addSpherify(matrix);
-        break;
-      }
       case 'taper': {
         this.addTaper(option as TaperOption, matrix);
+        break;
+      }
+      case 'bend': {
+        this.addBend(option as BendOption, matrix);
         break;
       }
       default: {

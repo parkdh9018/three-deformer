@@ -41,7 +41,7 @@ export const DeformerController = ({
 
   // Axis
   const onChangeAxis = (value: number) => {
-    deformer.setOption(name, { direction: value });
+    deformer.setOption(name, { axis: value });
   };
   const onChangeInvert = (value: number) => {
     deformer.setOption(name, { invert: value });
