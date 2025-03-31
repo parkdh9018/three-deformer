@@ -6,5 +6,5 @@ export type DeformerType = (typeof deformerTypeList)[number];
 
 export const selectedDeformerState = atom<DeformerType>({
   key: 'selectedDeformerState',
-  default: 'twist',
+  default: 'bend',
 });

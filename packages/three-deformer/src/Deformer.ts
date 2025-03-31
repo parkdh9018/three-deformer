@@ -263,9 +263,10 @@ class Deformer {
   }
 
   addBend(
-    option: EffectOption = {
+    option: BendOption = {
       direction: 'x',
       invert: false,
+      angle: 0,
     },
     matrix: Matrix4 = new Matrix4(),
   ): void {
@@ -275,14 +276,37 @@ class Deformer {
       throw new Error('[three-deformer] Geometry does not have bounding box');
     }
 
-    const invert = option.invert ? -1 : 1;
     const { min, max } = this.geometry.boundingBox;
     const center = new Vector3();
     this.geometry.boundingBox.getCenter(center);
 
+    const axis = option.direction ?? 'x';
+    const invert = option.invert ? -1 : 1;
+    const angle = (option.angle ?? 0) * (Math.PI / 180); // degrees → radians
+
+    const rotationMatrix = new Matrix4();
+    const inverseMatrix = new Matrix4();
+
+    switch (axis) {
+      case 'x':
+        rotationMatrix.makeRotationY(angle);
+        inverseMatrix.makeRotationY(-angle);
+        break;
+      case 'y':
+        rotationMatrix.makeRotationX(angle);
+        inverseMatrix.makeRotationX(-angle);
+        break;
+      case 'z':
+        rotationMatrix.makeRotationX(angle);
+        inverseMatrix.makeRotationX(-angle);
+        break;
+    }
+
     this.addEffect(
       'bend',
       vertex => {
+        vertex.applyMatrix4(rotationMatrix);
+
         const { x, y, z } = vertex;
         let a = 0,
           b = 0,
@@ -290,17 +314,7 @@ class Deformer {
         let R = 0,
           theta = 0;
 
-        switch (option.direction) {
-          case 'y': {
-            a = x - center.x;
-            b = z - center.z;
-            sc = (x - min.x) / (max.x - min.x);
-            R = Math.sqrt(a * a + b * b);
-            theta = Math.atan2(b, a) + sc * invert;
-            vertex.set(R * Math.cos(theta), y, R * Math.sin(theta));
-            break;
-          }
-
+        switch (axis) {
           case 'x': {
             a = y - center.y;
             b = z - center.z;
@@ -308,6 +322,16 @@ class Deformer {
             R = Math.sqrt(a * a + b * b);
             theta = Math.atan2(b, a) + sc * invert;
             vertex.set(x, R * Math.cos(theta), R * Math.sin(theta));
+            break;
+          }
+
+          case 'y': {
+            a = x - center.x;
+            b = z - center.z;
+            sc = (x - min.x) / (max.x - min.x);
+            R = Math.sqrt(a * a + b * b);
+            theta = Math.atan2(b, a) + sc * invert;
+            vertex.set(R * Math.cos(theta), y, R * Math.sin(theta));
             break;
           }
 
@@ -320,11 +344,9 @@ class Deformer {
             vertex.set(R * Math.cos(theta), R * Math.sin(theta), z);
             break;
           }
-
-          default:
-            console.warn(`[three-deformer] Unknown axis: ${option.direction}`);
         }
 
+        vertex.applyMatrix4(inverseMatrix);
         return vertex;
       },
       option,

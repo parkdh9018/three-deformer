@@ -20,12 +20,23 @@ export const CanvasArea = () => {
   deformer.addDeformer(selected);
   deformer.apply();
 
-  const TaperOption = {
+  const taperOption = {
     curveType: {
       options: ['linear', 'quadratic', 'sin', 'cubic'],
       value: 'linear',
       onChange: (value: string) => {
         deformer.setOption(selected, { curveType: value });
+      },
+    },
+  };
+
+  const bendOption = {
+    angle: {
+      value: 0,
+      min: 0,
+      max: 360,
+      onChange: (value: number) => {
+        deformer.setOption(selected, { angle: value });
       },
     },
   };
@@ -42,11 +53,16 @@ export const CanvasArea = () => {
           name={selected}
           mesh={mesh}
           deformer={deformer}
-          option={TaperOption}
+          option={taperOption}
         />
       )}
       {selected === 'bend' && (
-        <DeformerController name={selected} mesh={mesh} deformer={deformer} />
+        <DeformerController
+          name={selected}
+          mesh={mesh}
+          deformer={deformer}
+          option={bendOption}
+        />
       )}
     </S.StyledCanvas>
   );

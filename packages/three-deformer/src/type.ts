@@ -14,6 +14,7 @@ interface TaperOption {
 interface BendOption {
   direction: DirectionType;
   invert: boolean;
+  angle: number;
 }
 
 interface EffectOptionMap {
