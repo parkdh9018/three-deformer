@@ -1,18 +1,18 @@
-type DirectionType = 'x' | 'y' | 'z';
+type AxisType = 'x' | 'y' | 'z';
 
 interface TwistOption {
-  direction: DirectionType;
+  axis: AxisType;
   invert: boolean;
 }
 
 interface TaperOption {
-  direction: DirectionType;
+  axis: AxisType;
   invert: boolean;
   curveType: 'linear' | 'quadratic' | 'sin' | 'cubic';
 }
 
 interface BendOption {
-  direction: DirectionType;
+  axis: AxisType;
   invert: boolean;
   angle: number;
 }
