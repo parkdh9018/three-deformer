@@ -93,13 +93,15 @@ class Deformer {
 
   transform(name: EffectType, matrix: Matrix4): void {
     const effect = this.effects[name];
-    if (!effect) {
+    const index = this.effects[name]?.index ?? -1;
+
+    if (!effect || index === -1) {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
     let weight = 0;
     if (this.mesh.morphTargetInfluences) {
-      weight = this.mesh.morphTargetInfluences[0];
+      weight = this.mesh.morphTargetInfluences[index];
     }
 
     const tempGeometry = this.mesh.geometry.clone();
@@ -119,13 +121,14 @@ class Deformer {
 
   setOption(name: EffectType, value: Partial<EffectOption>): void {
     const effect = this.effects[name];
-    if (!effect) {
+    const index = this.effects[name]?.index ?? -1;
+    if (!effect || index === -1) {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
     let weight = 0;
     if (this.mesh.morphTargetInfluences) {
-      weight = this.mesh.morphTargetInfluences[0];
+      weight = this.mesh.morphTargetInfluences[index];
     }
 
     const tempGeometry = this.mesh.geometry.clone();
