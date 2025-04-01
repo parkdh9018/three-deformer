@@ -1,21 +1,21 @@
 type AxisType = 'x' | 'y' | 'z';
 
 interface TwistOption {
-  axis: AxisType;
-  invert: boolean;
-  strength: number;
+  axis?: AxisType;
+  invert?: boolean;
+  strength?: number;
 }
 
 interface TaperOption {
-  axis: AxisType;
-  invert: boolean;
-  curveType: 'linear' | 'quadratic' | 'sin' | 'cubic';
+  axis?: AxisType;
+  invert?: boolean;
+  curveType?: 'linear' | 'quadratic' | 'sin' | 'cubic';
 }
 
 interface BendOption {
-  axis: AxisType;
-  invert: boolean;
-  angle: number;
+  axis?: AxisType;
+  invert?: boolean;
+  angle?: number;
 }
 
 interface EffectOptionMap {
