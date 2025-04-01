@@ -6,28 +6,29 @@ import {
   Vector3,
 } from 'three';
 
-type EffectFunction = (vertex: Vector3, index?: number) => Vector3;
-type Effect = {
+export type DeformerEffectFunction = (
+  vertex: Vector3,
+  index?: number,
+) => Vector3;
+export type DeformerEffect = {
   index: number;
+  effectFunction: DeformerEffectFunction;
   matrix: Matrix4;
-  effect: EffectFunction;
   option: EffectOption;
 };
 
+const EffectTypeList = ['twist', 'taper', 'bend'] as const;
 class Deformer {
   mesh: Mesh;
-  geometry: BufferGeometry;
-  effects: Record<string, Effect>;
+  effects: Record<string, DeformerEffect>;
 
   constructor(mesh: Mesh) {
     this.mesh = mesh;
-    this.geometry = mesh.geometry;
     this.effects = {};
   }
 
   apply(): void {
-    this.applyDeformers(this.geometry);
-    this.mesh.updateMorphTargets();
+    this.applyDeformers(this.mesh.geometry);
   }
 
   applyDeformers(geometry: BufferGeometry): void {
@@ -47,14 +48,16 @@ class Deformer {
       const y = positionAttribute.getY(i);
       const z = positionAttribute.getZ(i);
 
-      Object.entries(this.effects).forEach(([_, { effect, matrix }], j) => {
-        const vertex = new Vector3(x, y, z);
+      Object.entries(this.effects).forEach(
+        ([_, { effectFunction, matrix }], j) => {
+          const vertex = new Vector3(x, y, z);
 
-        vertex.applyMatrix4(matrix);
-        const vector = effect(vertex, i);
+          vertex.applyMatrix4(matrix);
+          const vector = effectFunction(vertex, i);
 
-        vector.toArray(positionList[j], positionList[j].length);
-      });
+          vector.toArray(positionList[j], positionList[j].length);
+        },
+      );
     }
 
     for (let i = 0; i < positionList.length; i++) {
@@ -68,9 +71,9 @@ class Deformer {
 
   addEffect(
     name: string,
-    effect: EffectFunction,
-    option: EffectOption,
-    matrix: Matrix4,
+    effectFunction: DeformerEffectFunction,
+    option?: EffectOption,
+    matrix?: Matrix4,
   ): void {
     if (this.effects[name]) {
       throw new Error(`[three-deformer] Effect '${name}' already exists`);
@@ -78,9 +81,9 @@ class Deformer {
 
     this.effects[name] = {
       index: Object.keys(this.effects).length,
-      option,
-      effect,
-      matrix,
+      effectFunction,
+      option: option ?? {},
+      matrix: matrix ?? new Matrix4(),
     };
   }
 
@@ -99,13 +102,14 @@ class Deformer {
       weight = this.mesh.morphTargetInfluences[0];
     }
 
-    const tempGeometry = this.geometry.clone();
+    const tempGeometry = this.mesh.geometry.clone();
+    this.mesh.geometry.dispose();
     this.mesh.geometry = tempGeometry;
 
     effect.matrix = matrix;
 
     this.removeEffect(name);
-    this.addDeformer(name, effect.option, matrix);
+    this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
 
     this.applyDeformers(tempGeometry);
     this.mesh.updateMorphTargets();
@@ -124,13 +128,19 @@ class Deformer {
       weight = this.mesh.morphTargetInfluences[0];
     }
 
-    const tempGeometry = this.geometry.clone();
+    const tempGeometry = this.mesh.geometry.clone();
+    this.mesh.geometry.dispose();
     this.mesh.geometry = tempGeometry;
 
     effect.option = { ...effect.option, ...value };
 
     this.removeEffect(name);
-    this.addDeformer(name, effect.option, effect.matrix);
+
+    if (EffectTypeList.includes(name)) {
+      this.addDeformer(name, effect.option, effect.matrix);
+    } else {
+      this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
+    }
 
     this.applyDeformers(tempGeometry);
     this.mesh.updateMorphTargets();
@@ -142,7 +152,8 @@ class Deformer {
     option: TwistOption = { axis: 'x', invert: true, strength: 2 },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    const { axis, strength } = option;
+    const axis = option.axis ?? 'x';
+    const strength = option.strength ?? 2;
     const invert = option.invert ? -1 : 1;
 
     const direction = new Vector3();
@@ -190,14 +201,16 @@ class Deformer {
     option: TaperOption = { axis: 'x', invert: false, curveType: 'linear' },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    this.geometry.computeBoundingBox();
+    this.mesh.geometry.computeBoundingBox();
 
-    if (this.geometry.boundingBox === null) {
+    if (this.mesh.geometry.boundingBox === null) {
       throw new Error('[three-deformer] Geometry does not have bounding box');
     }
 
-    const { min, max } = this.geometry.boundingBox;
-    const { axis, invert, curveType } = option;
+    const { min, max } = this.mesh.geometry.boundingBox;
+    const axis = option.axis ?? 'x';
+    const invert = option.invert ?? false;
+    const curveType = option.curveType ?? 'linear';
 
     const range = {
       x: max.x - min.x || 1,
@@ -270,19 +283,19 @@ class Deformer {
     },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    this.geometry.computeBoundingBox();
+    this.mesh.geometry.computeBoundingBox();
 
-    if (this.geometry.boundingBox === null) {
+    if (this.mesh.geometry.boundingBox === null) {
       throw new Error('[three-deformer] Geometry does not have bounding box');
     }
 
-    const { min, max } = this.geometry.boundingBox;
+    const { min, max } = this.mesh.geometry.boundingBox;
     const center = new Vector3();
-    this.geometry.boundingBox.getCenter(center);
+    this.mesh.geometry.boundingBox.getCenter(center);
 
-    const { axis } = option;
-    const angle = (option.angle ?? 0) * (Math.PI / 180);
+    const axis = option.axis ?? 'x';
     const invert = option.invert ? -1 : 1;
+    const angle = (option.angle ?? 0) * (Math.PI / 180);
 
     const rotationMatrix = new Matrix4();
     const inverseMatrix = new Matrix4();
@@ -393,7 +406,9 @@ class Deformer {
         break;
       }
       default: {
-        throw new Error('[three-deformer] Deformer does not exist');
+        console.warn(
+          `[three-deformer] Effect '${name}' is not supported. Please use 'addEffect' instead.`,
+        );
       }
     }
   }
@@ -402,7 +417,7 @@ class Deformer {
     const index = this.effects[name]?.index ?? -1;
 
     if (index === -1) {
-      throw new Error('[three-deformer] Effect does not exist');
+      throw new Error(`[three-deformer] Effect '${name}' does not exist`);
     }
 
     if (!this.mesh.morphTargetInfluences) {
