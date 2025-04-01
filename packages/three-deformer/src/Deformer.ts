@@ -6,28 +6,29 @@ import {
   Vector3,
 } from 'three';
 
-type EffectFunction = (vertex: Vector3, index?: number) => Vector3;
-type Effect = {
+export type DeformerEffectFunction = (
+  vertex: Vector3,
+  index?: number,
+) => Vector3;
+export type DeformerEffect = {
   index: number;
-  effectFunction: EffectFunction;
+  effectFunction: DeformerEffectFunction;
   matrix: Matrix4;
   option: EffectOption;
 };
 
+const EffectTypeList = ['twist', 'taper', 'bend'] as const;
 class Deformer {
   mesh: Mesh;
-  geometry: BufferGeometry;
-  effects: Record<string, Effect>;
+  effects: Record<string, DeformerEffect>;
 
   constructor(mesh: Mesh) {
     this.mesh = mesh;
-    this.geometry = mesh.geometry;
     this.effects = {};
   }
 
   apply(): void {
-    this.applyDeformers(this.geometry);
-    this.mesh.updateMorphTargets();
+    this.applyDeformers(this.mesh.geometry);
   }
 
   applyDeformers(geometry: BufferGeometry): void {
@@ -70,7 +71,7 @@ class Deformer {
 
   addEffect(
     name: string,
-    effectFunction: EffectFunction,
+    effectFunction: DeformerEffectFunction,
     option?: EffectOption,
     matrix?: Matrix4,
   ): void {
@@ -101,7 +102,8 @@ class Deformer {
       weight = this.mesh.morphTargetInfluences[0];
     }
 
-    const tempGeometry = this.geometry.clone();
+    const tempGeometry = this.mesh.geometry.clone();
+    this.mesh.geometry.dispose();
     this.mesh.geometry = tempGeometry;
 
     effect.matrix = matrix;
@@ -126,13 +128,19 @@ class Deformer {
       weight = this.mesh.morphTargetInfluences[0];
     }
 
-    const tempGeometry = this.geometry.clone();
+    const tempGeometry = this.mesh.geometry.clone();
+    this.mesh.geometry.dispose();
     this.mesh.geometry = tempGeometry;
 
     effect.option = { ...effect.option, ...value };
 
     this.removeEffect(name);
-    this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
+
+    if (EffectTypeList.includes(name)) {
+      this.addDeformer(name, effect.option, effect.matrix);
+    } else {
+      this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
+    }
 
     this.applyDeformers(tempGeometry);
     this.mesh.updateMorphTargets();
@@ -193,13 +201,13 @@ class Deformer {
     option: TaperOption = { axis: 'x', invert: false, curveType: 'linear' },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    this.geometry.computeBoundingBox();
+    this.mesh.geometry.computeBoundingBox();
 
-    if (this.geometry.boundingBox === null) {
+    if (this.mesh.geometry.boundingBox === null) {
       throw new Error('[three-deformer] Geometry does not have bounding box');
     }
 
-    const { min, max } = this.geometry.boundingBox;
+    const { min, max } = this.mesh.geometry.boundingBox;
     const axis = option.axis ?? 'x';
     const invert = option.invert ?? false;
     const curveType = option.curveType ?? 'linear';
@@ -275,15 +283,15 @@ class Deformer {
     },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    this.geometry.computeBoundingBox();
+    this.mesh.geometry.computeBoundingBox();
 
-    if (this.geometry.boundingBox === null) {
+    if (this.mesh.geometry.boundingBox === null) {
       throw new Error('[three-deformer] Geometry does not have bounding box');
     }
 
-    const { min, max } = this.geometry.boundingBox;
+    const { min, max } = this.mesh.geometry.boundingBox;
     const center = new Vector3();
-    this.geometry.boundingBox.getCenter(center);
+    this.mesh.geometry.boundingBox.getCenter(center);
 
     const axis = option.axis ?? 'x';
     const invert = option.invert ? -1 : 1;
