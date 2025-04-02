@@ -1,9 +1,10 @@
 import { useControls } from 'leva';
 import * as THREE from 'three';
 import { Deformer } from 'three-deformer';
+import { EffectTypeWithCustom } from '../state/atoms/deformerAtom';
 
 type Props = {
-  name: string;
+  name: EffectTypeWithCustom;
   mesh: THREE.Mesh;
   deformer: Deformer;
   option?: object;

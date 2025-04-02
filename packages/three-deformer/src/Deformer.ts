@@ -5,19 +5,18 @@ import {
   Matrix4,
   Vector3,
 } from 'three';
+import {
+  BendOption,
+  DeformerEffect,
+  DeformerEffectFunction,
+  EffectOption,
+  EffectOptionMap,
+  EffectType,
+  TaperOption,
+  TwistOption,
+} from './type';
 
-export type DeformerEffectFunction = (
-  vertex: Vector3,
-  index?: number,
-) => Vector3;
-export type DeformerEffect = {
-  index: number;
-  effectFunction: DeformerEffectFunction;
-  matrix: Matrix4;
-  option: EffectOption;
-};
-
-const EffectTypeList = ['twist', 'taper', 'bend'] as const;
+const EffectTypeList = ['twist', 'taper', 'bend'] as EffectType[];
 class Deformer {
   mesh: Mesh;
   effects: Record<string, DeformerEffect>;
@@ -91,7 +90,7 @@ class Deformer {
     delete this.effects[name];
   }
 
-  transform(name: EffectType, matrix: Matrix4): void {
+  transform(name: string, matrix: Matrix4): void {
     const effect = this.effects[name];
     const index = this.effects[name]?.index ?? -1;
 
@@ -119,7 +118,7 @@ class Deformer {
     this.changeWeight(name, weight);
   }
 
-  setOption(name: EffectType, value: Partial<EffectOption>): void {
+  setOption<T extends EffectType>(name: T, value: EffectOptionMap[T]): void {
     const effect = this.effects[name];
     const index = this.effects[name]?.index ?? -1;
     if (!effect || index === -1) {
@@ -370,29 +369,9 @@ class Deformer {
     );
   }
 
-  // addSpherify(
-  //   option: SpherifyOption = {},
-  //   matrix: Matrix4 = new Matrix4(),
-  // ): void {
-  //   this.addEffect(
-  //     'spherify',
-  //     vertex => {
-  //       const { x, y, z } = vertex;
-  //       vertex.set(
-  //         x * Math.sqrt(1 - (y * y) / 2 - (z * z) / 2 + (y * y * z * z) / 3),
-  //         y * Math.sqrt(1 - (z * z) / 2 - (x * x) / 2 + (z * z * x * x) / 3),
-  //         z * Math.sqrt(1 - (x * x) / 2 - (y * y) / 2 + (x * x * y * y) / 3),
-  //       );
-  //       return vertex;
-  //     },
-  //     option,
-  //     matrix,
-  //   );
-  // }
-
   addDeformer<T extends EffectType>(
     name: T,
-    option?: EffectOption,
+    option?: EffectOptionMap[T],
     matrix?: Matrix4,
   ): void {
     switch (name) {

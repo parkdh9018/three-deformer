@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import { DeformerController } from './DeformerController';
-import { Deformer } from 'three-deformer';
+import { CurveType, Deformer } from 'three-deformer';
 import * as S from './CanvasArea.styled';
 import { useRecoilValue } from 'recoil';
-import { selectedDeformerState } from '../state/atoms/deformerAtom';
+import {
+  EffectTypeWithCustom,
+  selectedDeformerState,
+} from '../state/atoms/deformerAtom';
 import { customFunctionSelector } from '../state/atoms/customFunctionAtom';
 
 export const CanvasArea = () => {
@@ -25,14 +28,14 @@ export const CanvasArea = () => {
   }
   deformer.apply();
 
-  const deformerOptions: Record<string, object> = {
+  const deformerOptions: Record<EffectTypeWithCustom, object> = {
     twist: {
       strength: {
         value: 2,
         min: 1,
         max: 4,
         onChange: (value: number) => {
-          deformer.setOption(selected, { strength: value });
+          deformer.setOption('twist', { strength: value });
         },
       },
     },
@@ -40,8 +43,8 @@ export const CanvasArea = () => {
       curveType: {
         options: ['linear', 'quadratic', 'sin', 'cubic'],
         value: 'linear',
-        onChange: (value: string) => {
-          deformer.setOption(selected, { curveType: value });
+        onChange: (value: CurveType) => {
+          deformer.setOption('taper', { curveType: value });
         },
       },
     },
@@ -51,11 +54,11 @@ export const CanvasArea = () => {
         min: 0,
         max: 360,
         onChange: (value: number) => {
-          deformer.setOption(selected, { angle: value });
+          deformer.setOption('bend', { angle: value });
         },
       },
     },
-    custom: {}, // 추후 custom 옵션 확장을 대비한 placeholder
+    custom: {},
   };
 
   return (
