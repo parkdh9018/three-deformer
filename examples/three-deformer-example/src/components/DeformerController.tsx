@@ -1,13 +1,17 @@
 import { useControls } from 'leva';
 import * as THREE from 'three';
-import { Deformer } from 'three-deformer';
+import { AxisType, Deformer, EffectType } from 'three-deformer';
+import { EffectTypeWithCustom } from '../state/atoms/deformerAtom';
 
 type Props = {
-  name: string;
+  name: EffectTypeWithCustom;
   mesh: THREE.Mesh;
   deformer: Deformer;
   option?: object;
 };
+
+const isEffectType = (name: string): name is EffectType =>
+  ['twist', 'taper', 'bend'].includes(name as EffectType);
 
 export const DeformerController = ({
   name,
@@ -23,7 +27,7 @@ export const DeformerController = ({
 
   // Weight
   const onChangeWeight = (value: number) => {
-    deformer.changeWeight(name, value);
+    deformer.setWeight(name, value);
   };
 
   useControls({
@@ -40,32 +44,34 @@ export const DeformerController = ({
   useControls('Option', option);
 
   // Axis
-  const onChangeAxis = (value: number) => {
-    deformer.setOption(name, { axis: value });
-  };
-  const onChangeInvert = (value: number) => {
-    deformer.setOption(name, { invert: value });
-  };
-
-  useControls('Axis', {
-    axis: {
-      value: 'x',
-      options: ['x', 'y', 'z'],
-      onChange: onChangeAxis,
-    },
-    invert: {
-      value: false,
-      options: [true, false],
-      onChange: onChangeInvert,
-    },
-  });
+  useControls(
+    'Axis',
+    isEffectType(name)
+      ? {
+          axis: {
+            value: 'x',
+            options: ['x', 'y', 'z'],
+            onChange: (value: AxisType) => {
+              deformer.updateOption(name, { axis: value });
+            },
+          },
+          invert: {
+            value: false,
+            options: [true, false],
+            onChange: (value: boolean) => {
+              deformer.updateOption(name, { invert: value });
+            },
+          },
+        }
+      : {},
+  );
 
   // Matrix
   const onChangePosition = (value: { x: number; y: number; z: number }) => {
     _matrix.decompose(_position, _rotation, _scale);
     _position.set(value.x, value.y, value.z);
     _matrix.compose(_position, _rotation, _scale);
-    deformer.transform(name, _matrix);
+    deformer.updateMatrix(name, _matrix);
   };
 
   const onChangeRotation = (value: { x: number; y: number; z: number }) => {
@@ -73,14 +79,14 @@ export const DeformerController = ({
     _euler.set(value.x, value.y, value.z);
     _rotation.setFromEuler(_euler);
     _matrix.compose(_position, _rotation, _scale);
-    deformer.transform(name, _matrix);
+    deformer.updateMatrix(name, _matrix);
   };
 
   const onChangeScale = (value: { x: number; y: number; z: number }) => {
     _matrix.decompose(_position, _rotation, _scale);
     _scale.set(value.x, value.y, value.z);
     _matrix.compose(_position, _rotation, _scale);
-    deformer.transform(name, _matrix);
+    deformer.updateMatrix(name, _matrix);
   };
 
   useControls('Matrix', {

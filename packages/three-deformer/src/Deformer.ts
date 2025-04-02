@@ -5,19 +5,18 @@ import {
   Matrix4,
   Vector3,
 } from 'three';
+import {
+  BendOption,
+  DeformerEffect,
+  DeformerEffectFunction,
+  EffectOption,
+  EffectOptionMap,
+  EffectType,
+  TaperOption,
+  TwistOption,
+} from './type';
 
-export type DeformerEffectFunction = (
-  vertex: Vector3,
-  index?: number,
-) => Vector3;
-export type DeformerEffect = {
-  index: number;
-  effectFunction: DeformerEffectFunction;
-  matrix: Matrix4;
-  option: EffectOption;
-};
-
-const EffectTypeList = ['twist', 'taper', 'bend'] as const;
+const EffectTypeList = ['twist', 'taper', 'bend'] as EffectType[];
 class Deformer {
   mesh: Mesh;
   effects: Record<string, DeformerEffect>;
@@ -27,11 +26,11 @@ class Deformer {
     this.effects = {};
   }
 
-  apply(): void {
-    this.applyDeformers(this.mesh.geometry);
+  applyDeformers(): void {
+    this.computeMorphTargets(this.mesh.geometry);
   }
 
-  applyDeformers(geometry: BufferGeometry): void {
+  computeMorphTargets(geometry: BufferGeometry): void {
     const positionList = Array.from(
       { length: Object.keys(this.effects).length },
       () => [],
@@ -69,11 +68,11 @@ class Deformer {
     this.mesh.updateMorphTargets();
   }
 
-  addEffect(
+  registerEffect(
     name: string,
     effectFunction: DeformerEffectFunction,
-    option?: EffectOption,
     matrix?: Matrix4,
+    option?: EffectOption,
   ): void {
     if (this.effects[name]) {
       throw new Error(`[three-deformer] Effect '${name}' already exists`);
@@ -87,11 +86,11 @@ class Deformer {
     };
   }
 
-  removeEffect(name: string): void {
+  unregisterEffect(name: string): void {
     delete this.effects[name];
   }
 
-  transform(name: EffectType, matrix: Matrix4): void {
+  updateMatrix(name: string, matrix: Matrix4): void {
     const effect = this.effects[name];
     const index = this.effects[name]?.index ?? -1;
 
@@ -110,16 +109,21 @@ class Deformer {
 
     effect.matrix = matrix;
 
-    this.removeEffect(name);
-    this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
+    this.unregisterEffect(name);
+    this.registerEffect(
+      name,
+      effect.effectFunction,
+      effect.matrix,
+      effect.option,
+    );
 
-    this.applyDeformers(tempGeometry);
+    this.computeMorphTargets(tempGeometry);
     this.mesh.updateMorphTargets();
 
-    this.changeWeight(name, weight);
+    this.setWeight(name, weight);
   }
 
-  setOption(name: EffectType, value: Partial<EffectOption>): void {
+  updateOption<T extends EffectType>(name: T, value: EffectOptionMap[T]): void {
     const effect = this.effects[name];
     const index = this.effects[name]?.index ?? -1;
     if (!effect || index === -1) {
@@ -137,21 +141,26 @@ class Deformer {
 
     effect.option = { ...effect.option, ...value };
 
-    this.removeEffect(name);
+    this.unregisterEffect(name);
 
     if (EffectTypeList.includes(name)) {
       this.addDeformer(name, effect.option, effect.matrix);
     } else {
-      this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
+      this.registerEffect(
+        name,
+        effect.effectFunction,
+        effect.matrix,
+        effect.option,
+      );
     }
 
-    this.applyDeformers(tempGeometry);
+    this.computeMorphTargets(tempGeometry);
     this.mesh.updateMorphTargets();
 
-    this.changeWeight(name, weight);
+    this.setWeight(name, weight);
   }
 
-  addTwist(
+  addTwistDeformer(
     option: TwistOption = { axis: 'x', invert: true, strength: 2 },
     matrix: Matrix4 = new Matrix4(),
   ): void {
@@ -173,7 +182,7 @@ class Deformer {
     }
     direction.multiplyScalar(invert);
 
-    this.addEffect(
+    this.registerEffect(
       'twist',
       vertex => {
         const { x, y, z } = vertex;
@@ -195,12 +204,12 @@ class Deformer {
 
         return vertex;
       },
-      option,
       matrix,
+      option,
     );
   }
 
-  addTaper(
+  addTaperDeformer(
     option: TaperOption = { axis: 'x', invert: false, curveType: 'linear' },
     matrix: Matrix4 = new Matrix4(),
   ): void {
@@ -221,7 +230,7 @@ class Deformer {
       z: max.z - min.z || 1,
     };
 
-    this.addEffect(
+    this.registerEffect(
       'taper',
       vertex => {
         const { x, y, z } = vertex;
@@ -273,12 +282,12 @@ class Deformer {
         vertex.applyMatrix4(matrix);
         return vertex;
       },
-      option,
       matrix,
+      option,
     );
   }
 
-  addBend(
+  addBendDeformer(
     option: BendOption = {
       axis: 'x',
       invert: false,
@@ -318,7 +327,7 @@ class Deformer {
         break;
     }
 
-    this.addEffect(
+    this.registerEffect(
       'bend',
       vertex => {
         vertex.applyMatrix4(rotationMatrix);
@@ -365,47 +374,27 @@ class Deformer {
         vertex.applyMatrix4(inverseMatrix);
         return vertex;
       },
-      option,
       matrix,
+      option,
     );
   }
 
-  // addSpherify(
-  //   option: SpherifyOption = {},
-  //   matrix: Matrix4 = new Matrix4(),
-  // ): void {
-  //   this.addEffect(
-  //     'spherify',
-  //     vertex => {
-  //       const { x, y, z } = vertex;
-  //       vertex.set(
-  //         x * Math.sqrt(1 - (y * y) / 2 - (z * z) / 2 + (y * y * z * z) / 3),
-  //         y * Math.sqrt(1 - (z * z) / 2 - (x * x) / 2 + (z * z * x * x) / 3),
-  //         z * Math.sqrt(1 - (x * x) / 2 - (y * y) / 2 + (x * x * y * y) / 3),
-  //       );
-  //       return vertex;
-  //     },
-  //     option,
-  //     matrix,
-  //   );
-  // }
-
   addDeformer<T extends EffectType>(
     name: T,
-    option?: EffectOption,
+    option?: EffectOptionMap[T],
     matrix?: Matrix4,
   ): void {
     switch (name) {
       case 'twist': {
-        this.addTwist(option as TwistOption, matrix);
+        this.addTwistDeformer(option as TwistOption, matrix);
         break;
       }
       case 'taper': {
-        this.addTaper(option as TaperOption, matrix);
+        this.addTaperDeformer(option as TaperOption, matrix);
         break;
       }
       case 'bend': {
-        this.addBend(option as BendOption, matrix);
+        this.addBendDeformer(option as BendOption, matrix);
         break;
       }
       default: {
@@ -416,7 +405,7 @@ class Deformer {
     }
   }
 
-  changeWeight(name: string, value: number) {
+  setWeight(name: string, value: number) {
     const index = this.effects[name]?.index ?? -1;
 
     if (index === -1) {
