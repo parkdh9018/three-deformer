@@ -1,6 +1,6 @@
 import { useControls } from 'leva';
 import * as THREE from 'three';
-import { Deformer } from 'three-deformer';
+import { AxisType, Deformer, EffectType } from 'three-deformer';
 import { EffectTypeWithCustom } from '../state/atoms/deformerAtom';
 
 type Props = {
@@ -9,6 +9,9 @@ type Props = {
   deformer: Deformer;
   option?: object;
 };
+
+const isEffectType = (name: string): name is EffectType =>
+  ['twist', 'taper', 'bend'].includes(name as EffectType);
 
 export const DeformerController = ({
   name,
@@ -41,25 +44,27 @@ export const DeformerController = ({
   useControls('Option', option);
 
   // Axis
-  const onChangeAxis = (value: number) => {
-    deformer.setOption(name, { axis: value });
-  };
-  const onChangeInvert = (value: number) => {
-    deformer.setOption(name, { invert: value });
-  };
-
-  useControls('Axis', {
-    axis: {
-      value: 'x',
-      options: ['x', 'y', 'z'],
-      onChange: onChangeAxis,
-    },
-    invert: {
-      value: false,
-      options: [true, false],
-      onChange: onChangeInvert,
-    },
-  });
+  useControls(
+    'Axis',
+    isEffectType(name)
+      ? {
+          axis: {
+            value: 'x',
+            options: ['x', 'y', 'z'],
+            onChange: (value: AxisType) => {
+              deformer.setOption(name, { axis: value });
+            },
+          },
+          invert: {
+            value: false,
+            options: [true, false],
+            onChange: (value: boolean) => {
+              deformer.setOption(name, { invert: value });
+            },
+          },
+        }
+      : {},
+  );
 
   // Matrix
   const onChangePosition = (value: { x: number; y: number; z: number }) => {

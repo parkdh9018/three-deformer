@@ -71,8 +71,8 @@ class Deformer {
   addEffect(
     name: string,
     effectFunction: DeformerEffectFunction,
-    option?: EffectOption,
     matrix?: Matrix4,
+    option?: EffectOption,
   ): void {
     if (this.effects[name]) {
       throw new Error(`[three-deformer] Effect '${name}' already exists`);
@@ -110,7 +110,7 @@ class Deformer {
     effect.matrix = matrix;
 
     this.removeEffect(name);
-    this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
+    this.addEffect(name, effect.effectFunction, effect.matrix, effect.option);
 
     this.applyDeformers(tempGeometry);
     this.mesh.updateMorphTargets();
@@ -141,7 +141,7 @@ class Deformer {
     if (EffectTypeList.includes(name)) {
       this.addDeformer(name, effect.option, effect.matrix);
     } else {
-      this.addEffect(name, effect.effectFunction, effect.option, effect.matrix);
+      this.addEffect(name, effect.effectFunction, effect.matrix, effect.option);
     }
 
     this.applyDeformers(tempGeometry);
@@ -194,8 +194,8 @@ class Deformer {
 
         return vertex;
       },
-      option,
       matrix,
+      option,
     );
   }
 
@@ -272,8 +272,8 @@ class Deformer {
         vertex.applyMatrix4(matrix);
         return vertex;
       },
-      option,
       matrix,
+      option,
     );
   }
 
@@ -364,8 +364,8 @@ class Deformer {
         vertex.applyMatrix4(inverseMatrix);
         return vertex;
       },
-      option,
       matrix,
+      option,
     );
   }
 
