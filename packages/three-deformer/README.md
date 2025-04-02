@@ -1,7 +1,7 @@
 # three-deformer
 
 <p align="center">
-  <img src="image/bend_example.png" alt="three-deformer preview" width="500"/>
+  <img src="../../image/bend_example.png" alt="three-deformer preview" width="500"/>
 </p>
 
 A lightweight and flexible library for applying geometric deformers to 3D meshes in [Three.js](https://threejs.org/).
