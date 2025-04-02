@@ -1,10 +1,15 @@
 import { atom } from 'recoil';
+import { EffectType } from 'three-deformer';
 
-// TODO : 타입은 나중에 옮기자
-export const deformerTypeList = ['twist', 'taper', 'bend', 'custom'] as const;
-export type DeformerType = (typeof deformerTypeList)[number];
+export type EffectTypeWithCustom = EffectType | 'custom';
+export const deformerTypeList = [
+  'twist',
+  'taper',
+  'bend',
+  'custom',
+] as EffectTypeWithCustom[];
 
-export const selectedDeformerState = atom<DeformerType>({
+export const selectedDeformerState = atom<EffectTypeWithCustom>({
   key: 'selectedDeformerState',
   default: deformerTypeList[0],
 });
