@@ -1,20 +1,43 @@
 {
     "name": "three-deformer",
     "version": "1.0.0",
-    "description": "",
+    "description": "Deformer in three.js",
     "main": "dist/bundle.cjs.js",
     "module": "dist/bundle.esm.js",
     "type": "module",
-    "types" : "dist/index.d.ts",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/bundle.esm.js",
+            "require": "./dist/bundle.cjs.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "dev": "rollup -c -w",
         "build": "rollup -c",
         "watch": "rollup -cw"
     },
-    "keywords": [],
-    "author": "Donghwan park <parkdh9018@naver.com>",
-    "license": "ISC",
+    "keywords": [
+        "three",
+        "three.js",
+        "threejs",
+        "deformer",
+        "deform",
+        "modifier"
+    ],
+    "author": "Donghwan park",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/parkdh9018/three-deformer"
+    },
     "devDependencies": {
         "@babel/core": "^7.26.0",
         "@babel/preset-env": "^7.26.0",
@@ -39,6 +62,6 @@
         "typescript-eslint": "^8.18.1"
     },
     "peerDependencies": {
-        "three": "^0.174.0"
+        "three": ">=0.139.0 <1.0.0"
     }
 }
