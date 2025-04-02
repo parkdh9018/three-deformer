@@ -24,9 +24,9 @@ export const CanvasArea = () => {
   if (selected !== 'custom') {
     deformer.addDeformer(selected);
   } else {
-    deformer.addEffect('custom', customFunction);
+    deformer.registerEffect('custom', customFunction);
   }
-  deformer.apply();
+  deformer.applyDeformers();
 
   const deformerOptions: Record<EffectTypeWithCustom, object> = {
     twist: {
@@ -35,7 +35,7 @@ export const CanvasArea = () => {
         min: 1,
         max: 4,
         onChange: (value: number) => {
-          deformer.setOption('twist', { strength: value });
+          deformer.updateOption('twist', { strength: value });
         },
       },
     },
@@ -44,7 +44,7 @@ export const CanvasArea = () => {
         options: ['linear', 'quadratic', 'sin', 'cubic'],
         value: 'linear',
         onChange: (value: CurveType) => {
-          deformer.setOption('taper', { curveType: value });
+          deformer.updateOption('taper', { curveType: value });
         },
       },
     },
@@ -54,7 +54,7 @@ export const CanvasArea = () => {
         min: 0,
         max: 360,
         onChange: (value: number) => {
-          deformer.setOption('bend', { angle: value });
+          deformer.updateOption('bend', { angle: value });
         },
       },
     },
