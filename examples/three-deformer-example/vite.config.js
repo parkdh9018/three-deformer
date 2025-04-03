@@ -6,7 +6,8 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    outDir: 'dist',
+    outDir: 'build',
     emptyOutDir: true,
-  }
+  },
+  base: '/three-deformer/',
 });
