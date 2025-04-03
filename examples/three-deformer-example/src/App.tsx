@@ -1,19 +1,23 @@
 import { Sidebar } from './components/Sidebar';
 import { Viewer } from './components/Viewer';
-import * as S from './App.styled';
-import { useRecoilValue } from 'recoil';
-import { selectedDeformerState } from './state/atoms/deformerAtom';
-import { RightSidebar } from './components/rightSidebar/RightSidebar';
+import './app.css';
+import { CustomCodeSandbox } from './components/CustomCodeSandbox';
+import { Leva } from 'leva';
 
 function App() {
-  const selected = useRecoilValue(selectedDeformerState);
-
   return (
-    <S.StyledApp $isCustom={selected === 'custom'}>
-      <Sidebar />
-      <Viewer />
-      {selected === 'custom' && <RightSidebar />}
-    </S.StyledApp>
+    <div className="grid grid-cols-5">
+      <div className="cols-span-1">
+        <Sidebar />
+      </div>
+      <div className="col-span-4">
+        <Viewer />
+      </div>
+      <CustomCodeSandbox />
+      <div style={{ position: 'absolute', top: 62, right: 10 }}>
+        <Leva fill />
+      </div>
+    </div>
   );
 }
 

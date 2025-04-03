@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { DeformerController } from './DeformerController';
 import { CurveType, Deformer } from 'three-deformer';
-import * as S from './CanvasArea.styled';
 import { useRecoilValue } from 'recoil';
 import {
   EffectTypeWithCustom,
   selectedDeformerState,
 } from '../state/atoms/deformerAtom';
 import { customFunctionSelector } from '../state/atoms/customFunctionAtom';
+import { Canvas } from '@react-three/fiber';
 
 export const CanvasArea = () => {
   const selected = useRecoilValue(selectedDeformerState);
@@ -62,7 +62,7 @@ export const CanvasArea = () => {
   };
 
   return (
-    <S.StyledCanvas camera={{ position: [2, 2, 5], fov: 60 }}>
+    <Canvas className="bg-base-300" camera={{ position: [2, 2, 5], fov: 60 }}>
       <ambientLight />
       <directionalLight position={[3, 3, 3]} />
       {selected && (
@@ -74,6 +74,6 @@ export const CanvasArea = () => {
           option={deformerOptions[selected]}
         />
       )}
-    </S.StyledCanvas>
+    </Canvas>
   );
 };
