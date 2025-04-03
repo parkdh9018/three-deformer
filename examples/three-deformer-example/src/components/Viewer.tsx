@@ -1,6 +1,7 @@
 import { useRecoilValue } from 'recoil';
 import { CanvasArea } from './CanvasArea';
 import { selectedDeformerState } from '../state/atoms/deformerAtom';
+import { capitalizeFirstLetter } from '../utils';
 
 export const Viewer = () => {
   const selected = useRecoilValue(selectedDeformerState);
@@ -14,7 +15,9 @@ export const Viewer = () => {
     <div className="h-full w-full">
       <div className="navbar bg-base-200 shadow-sm">
         <div className="flex-1">
-          <span className="ml-2 text-2xl font-bold">{selected}</span>
+          <span className="ml-2 text-2xl font-bold">
+            {capitalizeFirstLetter(selected)}
+          </span>
         </div>
         <div className="flex-none">
           {selected === 'custom' && (

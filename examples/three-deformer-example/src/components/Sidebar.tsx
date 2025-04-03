@@ -3,6 +3,7 @@ import {
   deformerTypeList,
   selectedDeformerState,
 } from '../state/atoms/deformerAtom';
+import { capitalizeFirstLetter } from '../utils';
 
 export const Sidebar = () => {
   const setSelected = useSetRecoilState(selectedDeformerState);
@@ -11,6 +12,8 @@ export const Sidebar = () => {
     <ul className="menu  w-full p-2 shadow-sm">
       <li className="text-2xl font-bold menu-title">three-deformer</li>
       <li>
+        {/* <a className="cursor-pointer">Getting started</a> */}
+        <a>Interactive Deformers</a>
         <ul className="list-row cursor-pointer">
           {deformerTypeList.map(name => (
             <li
@@ -19,7 +22,7 @@ export const Sidebar = () => {
                 setSelected(name);
               }}
             >
-              <span>{name}</span>
+              <span>{capitalizeFirstLetter(name)}</span>
             </li>
           ))}
         </ul>
