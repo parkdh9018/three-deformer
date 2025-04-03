@@ -8,6 +8,8 @@ A lightweight and flexible library for applying geometric deformers to 3D meshes
 
 Supports common deformations like **bend**, **twist**, and **taper**, and allows you to create custom deformers with ease.
 
+**[Live Example](https://parkdh9018.github.io/three-deformer/)**
+
 #### Features
 
 - Built-in deformers: Bend, Twist, Taper
