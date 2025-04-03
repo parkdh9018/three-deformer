@@ -2,10 +2,14 @@
     "name": "three-deformer-repo",
     "private": true,
     "version": "0.0.1",
-    "workspaces": ["packages/*", "examples/*"],
+    "workspaces": [
+        "packages/*",
+        "examples/*"
+    ],
     "scripts": {
-        "build" : "pnpm --filter three-deformer run build",
+        "build": "pnpm --filter three-deformer run build",
         "lib": "pnpm --filter three-deformer run dev",
-        "dev": "pnpm --filter three-deformer-example run dev"
+        "dev": "pnpm --filter three-deformer-example run dev",
+        "deploy": "pnpm --filter three-deformer-example run deploy"
     }
-}  
+}
