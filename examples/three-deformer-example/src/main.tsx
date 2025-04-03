@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RecoilRoot } from 'recoil';
-import './styles/index.css';
+import './app.css';
 import App from './App';
 
 createRoot(document.getElementById('root')!).render(
