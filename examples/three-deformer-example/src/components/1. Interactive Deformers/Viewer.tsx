@@ -1,7 +1,8 @@
 import { useRecoilValue } from 'recoil';
 import { CanvasArea } from './CanvasArea';
-import { selectedDeformerState } from '../state/atoms/deformerAtom';
-import { capitalizeFirstLetter } from '../utils';
+import { selectedDeformerState } from '../../state/atoms/deformerAtom';
+import { capitalizeFirstLetter } from '../../utils';
+import { CustomCodeSandbox } from './CustomCodeSandbox';
 
 export const Viewer = () => {
   const selected = useRecoilValue(selectedDeformerState);
@@ -13,7 +14,7 @@ export const Viewer = () => {
 
   return (
     <div className="h-full w-full">
-      <div className="navbar bg-base-200 shadow-sm">
+      <div className="navbar bg-base-100 shadow-sm">
         <div className="flex-1">
           <span className="ml-2 text-2xl font-bold">
             {capitalizeFirstLetter(selected)}
@@ -33,6 +34,7 @@ export const Viewer = () => {
       <div className="h-[calc(100vh-64px)] w-full">
         <CanvasArea />
       </div>
+      <CustomCodeSandbox />
     </div>
   );
 };

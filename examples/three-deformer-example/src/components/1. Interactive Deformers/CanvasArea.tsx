@@ -1,12 +1,11 @@
 import * as THREE from 'three';
-import { DeformerController } from './DeformerController';
 import { CurveType, Deformer } from 'three-deformer';
 import { useRecoilValue } from 'recoil';
 import {
   EffectTypeWithCustom,
   selectedDeformerState,
-} from '../state/atoms/deformerAtom';
-import { customFunctionSelector } from '../state/atoms/customFunctionAtom';
+} from '../../state/atoms/deformerAtom';
+import { customFunctionSelector } from '../../state/atoms/customFunctionAtom';
 import { Canvas } from '@react-three/fiber';
 import {
   GizmoHelper,
@@ -14,6 +13,7 @@ import {
   Grid,
   OrbitControls,
 } from '@react-three/drei';
+import { DeformerController } from './DeformerController';
 
 export const CanvasArea = () => {
   const selected = useRecoilValue(selectedDeformerState);
