@@ -1,7 +1,7 @@
 import { useControls } from 'leva';
 import * as THREE from 'three';
 import { AxisType, Deformer, EffectType } from 'three-deformer';
-import { EffectTypeWithCustom } from '../state/atoms/deformerAtom';
+import { EffectTypeWithCustom } from '../../state/atoms/deformerAtom';
 
 type Props = {
   name: EffectTypeWithCustom;

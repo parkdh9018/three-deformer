@@ -1,5 +1,5 @@
 import { useRecoilState } from 'recoil';
-import { customFunctionAtom } from '../state/atoms/customFunctionAtom';
+import { customFunctionAtom } from '../../state/atoms/customFunctionAtom';
 import { useState } from 'react';
 import MonacoEditor, { OnChange } from '@monaco-editor/react';
 

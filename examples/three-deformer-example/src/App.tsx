@@ -1,19 +1,22 @@
 import { Sidebar } from './components/Sidebar';
-import { Viewer } from './components/Viewer';
+import { Viewer } from './components/1. Interactive Deformers/Viewer';
 import './app.css';
-import { CustomCodeSandbox } from './components/CustomCodeSandbox';
 import { Leva } from 'leva';
+import { pageIndexState } from './state/atoms/pageIndexAtom';
+import { useRecoilValue } from 'recoil';
+import { Page } from './components/0. Getting started/Page';
 
 function App() {
+  const pageIndex = useRecoilValue(pageIndexState);
+
   return (
-    <div className="grid grid-cols-5">
-      <div className="cols-span-1">
+    <div className="flex flex-row">
+      <div className="basis-2xs bg-base-200">
         <Sidebar />
       </div>
-      <div className="col-span-4">
-        <Viewer />
+      <div className="basis-full">
+        {pageIndex !== 0 ? <Viewer /> : <Page />}
       </div>
-      <CustomCodeSandbox />
       <div style={{ position: 'absolute', top: 62, right: 10 }}>
         <Leva fill />
       </div>
