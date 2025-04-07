@@ -1,12 +1,18 @@
-import MonacoEditor from '@monaco-editor/react';
-import { OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { useEffect, useState } from 'react';
+import * as THREE from 'three';
+import { Deformer, EffectType } from 'three-deformer';
+import { CodeAndCanvas } from '../PageComponents/CodeAndCanvas';
+
+const text1 = `
 import * as THREE from 'three';
 import { Deformer } from 'three-deformer';
 
-const text1 = `import * as THREE from 'three';
-import { Deformer } from 'three-deformer';
-
+const mesh = new THREE.Mesh(
+  new THREE.BoxGeometry(2, 2, 2, 32, 32, 32),
+  new THREE.MeshStandardMaterial(
+    { color: 'orange' }
+  ),
+);
 const mesh = new THREE.Mesh(geometry, material);
 
 // 1. Create a Deformer instance
@@ -18,18 +24,42 @@ deformer.addBendDeformer();
 // 3. Apply the deformer(s) to the mesh
 deformer.applyDeformers();
 
-// 4. Optionally, adjust the deformation weight
+// 4. adjust the deformation weight
 deformer.setWeight('bend', 0.5);`;
 
-export const Page = () => {
+const text2 = `
+deformer.addTaperDeformer();
+deformer.updateOption('taper', {
+  axis: 'x'
+  curveType : 'linear',
+})
+`;
+const createDeformerExample = (deformerName: EffectType) => {
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(2, 2, 2, 32, 32, 32),
     new THREE.MeshStandardMaterial({ color: 'orange' }),
   );
   const deformer = new Deformer(mesh);
-  deformer.addTwistDeformer();
+  deformer.addDeformer(deformerName);
   deformer.applyDeformers();
-  deformer.setWeight('twist', 0.5);
+  return { mesh, deformer };
+};
+
+export const Page = () => {
+  const [value, setValue] = useState(50);
+  const [value2, setValue2] = useState(50);
+
+  // basic example
+  const { mesh, deformer } = createDeformerExample('twist');
+  useEffect(() => {
+    deformer.setWeight('twist', value / 100);
+  }, [value]);
+
+  // option example
+  const { mesh: mesh2, deformer: deformer2 } = createDeformerExample('taper');
+  useEffect(() => {
+    deformer2.setWeight('taper', value2 / 100);
+  }, [value2]);
 
   return (
     <div className="h-full w-full flex bg-base-100">
@@ -44,48 +74,74 @@ export const Page = () => {
             Mesh objects in a Three.js scene. Below is a minimal example
             demonstrating how to use the library
           </p>
-          <div className="flex gap-5 flex-row px-3">
-            <div className="basis-1/2 py-10">
-              <MonacoEditor
-                theme="vs-dark"
-                height="350px"
-                language="javascript"
-                defaultValue={text1}
-                options={{
-                  readOnly: true,
-                  wordWrap: 'on',
-                  scrollBeyondLastLine: false,
-                  minimap: { enabled: false },
-                  scrollbar: {
-                    vertical: 'hidden',
-                    horizontal: 'hidden',
-                  },
-                  lineNumbers: 'off',
-                  overviewRulerLanes: 0,
+          <CodeAndCanvas code={text1} mesh={mesh} deformer={deformer}>
+            <div className="flex flex-col w-full gap-3">
+              <p className="font-light text-md ml-2">Weight</p>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={value}
+                className="range range-primary w-full range-sm"
+                onChange={e => {
+                  setValue(Number(e.target.value));
                 }}
               />
             </div>
-            <div className="basis-1/2 py-10 ">
-              <Canvas
-                style={{ backgroundColor: 'skyblue', borderRadius: '10px' }}
-              >
-                <primitive object={mesh} position={[0, 0, 0]} />
-                <ambientLight color={'white'} intensity={1.5} />
-                <directionalLight
-                  color={'white'}
-                  intensity={1.5}
-                  position={[1, 1, 1]}
-                />
-                <OrbitControls />
-              </Canvas>
-            </div>
-          </div>
+          </CodeAndCanvas>
           <div className="bg-accent p-5 rounded-lg text-accent-content opacity-80">
             <p className="text-2xl font-bold text-md mb-6">💡 Important</p>
             After adding any deformer, you must call{' '}
             <span className="font-bold">applyDeformers()</span> for it to take
             effect on your mesh.
           </div>
+        </div>
+        <div className="py-4 px-6">
+          <div className="divider" />
+          <h3 className="text-2xl font-bold text-md mb-6">Update Option</h3>
+          <p className="font-light text-gray-500 sm:text-xl dark:text-gray-400">
+            You can selectively update only the options you care about using{' '}
+            <code>updateOption</code>. In this case, taper is applied along the{' '}
+            <b>x-axis</b> with a <b>linear</b> curve — all other defaults are
+            preserved. preserved.
+          </p>
+          <CodeAndCanvas
+            code={text2}
+            mesh={mesh2}
+            deformer={deformer2}
+            height="150px"
+          >
+            <div className="flex flex-col w-full gap-3">
+              <p className="font-light text-md ml-2">Weight</p>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={value2}
+                className="range range-primary w-full range-sm"
+                onChange={e => {
+                  setValue2(Number(e.target.value));
+                }}
+              />
+            </div>
+            <div className="flex flex-col w-full gap-3">
+              <p className="font-light text-md ml-2">Curve Type</p>
+              <select
+                defaultValue="Small"
+                className="select select-sm"
+                onChange={e => {
+                  deformer2.updateOption('taper', {
+                    curveType: e.target.value as 'linear',
+                  });
+                }}
+              >
+                <option>linear</option>
+                <option>quadratic</option>
+                <option>sin</option>
+                <option>cubic</option>
+              </select>
+            </div>
+          </CodeAndCanvas>
         </div>
       </div>
     </div>
