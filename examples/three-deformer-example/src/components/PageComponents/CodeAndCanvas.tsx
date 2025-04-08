@@ -34,6 +34,7 @@ export const CodeAndCanvas = ({
             scrollbar: {
               vertical: 'hidden',
               horizontal: 'hidden',
+              handleMouseWheel: false,
             },
             lineNumbers: 'off',
             overviewRulerLanes: 0,
