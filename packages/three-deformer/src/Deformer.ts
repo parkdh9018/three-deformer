@@ -4,6 +4,8 @@ import {
   Mesh,
   Matrix4,
   Vector3,
+  Object3D,
+  Box3,
 } from 'three';
 import {
   BendOption,
@@ -18,19 +20,26 @@ import {
 
 const EffectTypeList = ['twist', 'taper', 'bend'] as EffectType[];
 class Deformer {
-  mesh: Mesh;
+  object: Object3D;
+  objectBoundingBox: Box3;
   effects: Record<string, DeformerEffect>;
 
-  constructor(mesh: Mesh) {
-    this.mesh = mesh;
+  constructor(object: Object3D) {
+    this.object = object;
+    this.objectBoundingBox = this.computeBoundingBox(object);
     this.effects = {};
   }
 
   applyDeformers(): void {
-    this.computeMorphTargets(this.mesh.geometry);
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
+
+      this.computeMorphTargets(child);
+      child.updateMorphTargets();
+    });
   }
 
-  computeMorphTargets(geometry: BufferGeometry): void {
+  computeMorphTargets(mesh: Mesh): void {
     const positionList = Array.from(
       { length: Object.keys(this.effects).length },
       () => [],
@@ -38,9 +47,29 @@ class Deformer {
 
     if (positionList.length === 0) return;
 
-    geometry.morphAttributes.position = [];
+    mesh.geometry.morphAttributes.position = [];
 
-    const positionAttribute = geometry.attributes.position;
+    const positionAttribute = mesh.geometry.attributes.position;
+
+    const objectCenter = new Vector3();
+    this.objectBoundingBox.getCenter(objectCenter);
+    objectCenter.applyMatrix4(this.object.matrixWorld);
+
+    const geometryCenter = new Vector3();
+    mesh.geometry.computeBoundingBox();
+    if (mesh.geometry.boundingBox) {
+      mesh.geometry.boundingBox.getCenter(geometryCenter);
+    }
+    geometryCenter.applyMatrix4(mesh.matrixWorld);
+
+    const diff = geometryCenter.clone().sub(objectCenter);
+
+    const diffMatrix = new Matrix4().makeTranslation(diff.x, diff.y, diff.z);
+    const reverseDiffMatrix = new Matrix4().makeTranslation(
+      -diff.x,
+      -diff.y,
+      -diff.z,
+    );
 
     for (let i = 0; i < positionAttribute.count; i++) {
       const x = positionAttribute.getX(i);
@@ -51,8 +80,11 @@ class Deformer {
         ([_, { effectFunction, matrix }], j) => {
           const vertex = new Vector3(x, y, z);
 
-          vertex.applyMatrix4(matrix);
+          vertex.applyMatrix4(diffMatrix);
+
           const vector = effectFunction(vertex, i);
+
+          vertex.applyMatrix4(reverseDiffMatrix);
 
           vector.toArray(positionList[j], positionList[j].length);
         },
@@ -60,12 +92,10 @@ class Deformer {
     }
 
     for (let i = 0; i < positionList.length; i++) {
-      geometry.morphAttributes.position.push(
+      mesh.geometry.morphAttributes.position.push(
         new Float32BufferAttribute(positionList[i], 3),
       );
     }
-
-    this.mesh.updateMorphTargets();
   }
 
   registerEffect(
@@ -83,6 +113,7 @@ class Deformer {
       effectFunction,
       option: option ?? {},
       matrix: matrix ?? new Matrix4(),
+      weight: 0,
     };
   }
 
@@ -98,14 +129,7 @@ class Deformer {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
-    let weight = 0;
-    if (this.mesh.morphTargetInfluences) {
-      weight = this.mesh.morphTargetInfluences[index];
-    }
-
-    const tempGeometry = this.mesh.geometry.clone();
-    this.mesh.geometry.dispose();
-    this.mesh.geometry = tempGeometry;
+    let weight = effect.weight;
 
     effect.matrix = matrix;
 
@@ -117,8 +141,16 @@ class Deformer {
       effect.option,
     );
 
-    this.computeMorphTargets(tempGeometry);
-    this.mesh.updateMorphTargets();
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
+
+      const tempGeometry = child.geometry.clone(); // 타입 지정 필요
+      child.geometry.dispose();
+      child.geometry = tempGeometry;
+
+      this.computeMorphTargets(child);
+      child.updateMorphTargets();
+    });
 
     this.setWeight(name, weight);
   }
@@ -130,14 +162,7 @@ class Deformer {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
-    let weight = 0;
-    if (this.mesh.morphTargetInfluences) {
-      weight = this.mesh.morphTargetInfluences[index];
-    }
-
-    const tempGeometry = this.mesh.geometry.clone();
-    this.mesh.geometry.dispose();
-    this.mesh.geometry = tempGeometry;
+    let weight = effect.weight;
 
     effect.option = { ...effect.option, ...value };
 
@@ -154,8 +179,15 @@ class Deformer {
       );
     }
 
-    this.computeMorphTargets(tempGeometry);
-    this.mesh.updateMorphTargets();
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
+      const tempGeometry = child.geometry.clone(); // 타입 지정 필요
+      child.geometry.dispose();
+      child.geometry = tempGeometry;
+
+      this.computeMorphTargets(child);
+      child.updateMorphTargets();
+    });
 
     this.setWeight(name, weight);
   }
@@ -209,17 +241,34 @@ class Deformer {
     );
   }
 
+  computeBoundingBox = (object: Object3D): Box3 => {
+    const boundingBox = new Box3();
+    object.updateWorldMatrix(true, true); // 모든 자식까지 matrix 업데이트
+
+    object.traverse(child => {
+      if ((child as Mesh).isMesh) {
+        const mesh = child as Mesh;
+        const geometry = mesh.geometry;
+
+        if (!geometry.boundingBox) {
+          geometry.computeBoundingBox(); // 없으면 계산
+        }
+
+        const box = geometry.boundingBox!.clone();
+        box.applyMatrix4(mesh.matrixWorld); // 월드 변환 적용
+
+        boundingBox.union(box); // bounding box에 병합
+      }
+    });
+
+    return boundingBox;
+  };
+
   addTaperDeformer(
     option: TaperOption = { axis: 'x', invert: false, curveType: 'linear' },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    this.mesh.geometry.computeBoundingBox();
-
-    if (this.mesh.geometry.boundingBox === null) {
-      throw new Error('[three-deformer] Geometry does not have bounding box');
-    }
-
-    const { min, max } = this.mesh.geometry.boundingBox;
+    const { min, max } = this.objectBoundingBox;
     const axis = option.axis ?? 'x';
     const invert = option.invert ?? false;
     const curveType = option.curveType ?? 'linear';
@@ -295,15 +344,10 @@ class Deformer {
     },
     matrix: Matrix4 = new Matrix4(),
   ): void {
-    this.mesh.geometry.computeBoundingBox();
+    const { min, max } = this.objectBoundingBox;
 
-    if (this.mesh.geometry.boundingBox === null) {
-      throw new Error('[three-deformer] Geometry does not have bounding box');
-    }
-
-    const { min, max } = this.mesh.geometry.boundingBox;
     const center = new Vector3();
-    this.mesh.geometry.boundingBox.getCenter(center);
+    this.objectBoundingBox.getCenter(center);
 
     const axis = option.axis ?? 'x';
     const invert = option.invert ? -1 : 1;
@@ -412,13 +456,17 @@ class Deformer {
       throw new Error(`[three-deformer] Effect '${name}' does not exist`);
     }
 
-    if (!this.mesh.morphTargetInfluences) {
-      throw new Error(
-        `[three-deformer] Mesh does not have morphTargetInfluences. Make sure to call 'apply()' before using this deformer.`,
-      );
-    }
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
 
-    this.mesh.morphTargetInfluences[index] = value;
+      if (!child.morphTargetInfluences) {
+        throw new Error(
+          `[three-deformer] Mesh does not have morphTargetInfluences. Make sure to call 'apply()' before using this deformer.`,
+        );
+      }
+
+      child.morphTargetInfluences[index] = value;
+    });
   }
 }
 

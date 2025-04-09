@@ -38,4 +38,5 @@ export type DeformerEffect = {
   effectFunction: DeformerEffectFunction;
   matrix: Matrix4;
   option: EffectOption;
+  weight: number;
 };
