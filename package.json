@@ -11,5 +11,8 @@
         "lib": "pnpm --filter three-deformer run dev",
         "dev": "pnpm --filter three-deformer-example run dev",
         "deploy": "pnpm --filter three-deformer-example run deploy"
+    },
+    "devDependencies": {
+        "@changesets/cli": "^2.28.1"
     }
 }
