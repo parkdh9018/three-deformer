@@ -1,5 +1,4 @@
 import {
-  BufferGeometry,
   Float32BufferAttribute,
   Mesh,
   Matrix4,
@@ -35,7 +34,6 @@ class Deformer {
       if (!(child instanceof Mesh)) return;
 
       this.computeMorphTargets(child);
-      child.updateMorphTargets();
     });
   }
 
@@ -79,7 +77,7 @@ class Deformer {
       Object.entries(this.effects).forEach(
         ([_, { effectFunction, matrix }], j) => {
           const vertex = new Vector3(x, y, z);
-
+          vertex.applyMatrix4(matrix);
           vertex.applyMatrix4(diffMatrix);
 
           const vector = effectFunction(vertex, i);
@@ -96,6 +94,8 @@ class Deformer {
         new Float32BufferAttribute(positionList[i], 3),
       );
     }
+
+    mesh.updateMorphTargets();
   }
 
   registerEffect(
@@ -133,6 +133,14 @@ class Deformer {
 
     effect.matrix = matrix;
 
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
+
+      const tempGeometry = child.geometry.clone(); // 타입 지정 필요
+      child.geometry.dispose();
+      child.geometry = tempGeometry;
+    });
+
     this.unregisterEffect(name);
     this.registerEffect(
       name,
@@ -144,12 +152,7 @@ class Deformer {
     this.object.traverse((child: Object3D) => {
       if (!(child instanceof Mesh)) return;
 
-      const tempGeometry = child.geometry.clone(); // 타입 지정 필요
-      child.geometry.dispose();
-      child.geometry = tempGeometry;
-
       this.computeMorphTargets(child);
-      child.updateMorphTargets();
     });
 
     this.setWeight(name, weight);
@@ -162,15 +165,24 @@ class Deformer {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
-    let weight = effect.weight;
+    const weight = effect.weight;
 
     effect.option = { ...effect.option, ...value };
+
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
+      const tempGeometry = child.geometry.clone(); // 타입 지정 필요
+      child.geometry.dispose();
+      child.geometry = tempGeometry;
+    });
 
     this.unregisterEffect(name);
 
     if (EffectTypeList.includes(name)) {
+      // built-in deformer (twist, taper, bend)
       this.addDeformer(name, effect.option, effect.matrix);
     } else {
+      // custom deformer
       this.registerEffect(
         name,
         effect.effectFunction,
@@ -181,12 +193,8 @@ class Deformer {
 
     this.object.traverse((child: Object3D) => {
       if (!(child instanceof Mesh)) return;
-      const tempGeometry = child.geometry.clone(); // 타입 지정 필요
-      child.geometry.dispose();
-      child.geometry = tempGeometry;
 
       this.computeMorphTargets(child);
-      child.updateMorphTargets();
     });
 
     this.setWeight(name, weight);
@@ -455,6 +463,8 @@ class Deformer {
     if (index === -1) {
       throw new Error(`[three-deformer] Effect '${name}' does not exist`);
     }
+
+    this.effects[name].weight = value;
 
     this.object.traverse((child: Object3D) => {
       if (!(child instanceof Mesh)) return;
