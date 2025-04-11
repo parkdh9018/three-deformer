@@ -2,6 +2,7 @@ import { useControls } from 'leva';
 import * as THREE from 'three';
 import { AxisType, Deformer, EffectType } from 'three-deformer';
 import { EffectTypeWithCustom } from '../../state/atoms/deformerAtom';
+import { useMemo } from 'react';
 
 type Props = {
   name: EffectTypeWithCustom;
@@ -24,6 +25,17 @@ export const DeformerController = ({
   const _rotation = new THREE.Quaternion();
   const _euler = new THREE.Euler();
   const _scale = new THREE.Vector3();
+
+  const matrixMesh = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+
+    const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+    const edges = new THREE.EdgesGeometry(geometry);
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+    return new THREE.LineSegments(edges, lineMaterial);
+  }, [mesh]);
 
   // Weight
   const onChangeWeight = (value: number) => {
@@ -71,6 +83,8 @@ export const DeformerController = ({
     _matrix.decompose(_position, _rotation, _scale);
     _position.set(value.x, value.y, value.z);
     _matrix.compose(_position, _rotation, _scale);
+
+    matrixMesh.position.set(value.x, value.y, value.z);
     deformer.updateMatrix(name, _matrix);
   };
 
@@ -79,6 +93,8 @@ export const DeformerController = ({
     _euler.set(value.x, value.y, value.z);
     _rotation.setFromEuler(_euler);
     _matrix.compose(_position, _rotation, _scale);
+
+    matrixMesh.setRotationFromMatrix(_matrix);
     deformer.updateMatrix(name, _matrix);
   };
 
@@ -86,6 +102,8 @@ export const DeformerController = ({
     _matrix.decompose(_position, _rotation, _scale);
     _scale.set(value.x, value.y, value.z);
     _matrix.compose(_position, _rotation, _scale);
+
+    matrixMesh.scale.set(value.x, value.y, value.z);
     deformer.updateMatrix(name, _matrix);
   };
 
@@ -108,5 +126,10 @@ export const DeformerController = ({
     },
   });
 
-  return <primitive object={mesh} />;
+  return (
+    <>
+      <primitive object={matrixMesh} />
+      <primitive object={mesh} />
+    </>
+  );
 };
