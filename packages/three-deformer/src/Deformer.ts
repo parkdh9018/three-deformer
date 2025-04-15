@@ -98,6 +98,51 @@ class Deformer {
     mesh.updateMorphTargets();
   }
 
+  bakeDeformers(): void {
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
+
+      this.bakeMesh(child);
+    });
+    Object.keys(this.effects).forEach(name => this.unregisterEffect(name));
+  }
+
+  bakeMesh(mesh: Mesh): void {
+    const geometry = mesh.geometry;
+    const position = geometry.attributes.position;
+    const morphAttributes = geometry.morphAttributes.position;
+
+    if (!mesh.morphTargetInfluences || !morphAttributes?.length) return;
+
+    const temp = position.array.slice();
+
+    for (let i = 0; i < morphAttributes.length; i++) {
+      const influence = mesh.morphTargetInfluences[i];
+      if (!influence) continue;
+
+      const morph = morphAttributes[i];
+
+      for (let j = 0; j < morph.count; j++) {
+        temp[j * 3 + 0] +=
+          (morph.array[j * 3 + 0] - position.array[j * 3 + 0]) * influence;
+        temp[j * 3 + 1] +=
+          (morph.array[j * 3 + 1] - position.array[j * 3 + 1]) * influence;
+        temp[j * 3 + 2] +=
+          (morph.array[j * 3 + 2] - position.array[j * 3 + 2]) * influence;
+      }
+    }
+
+    position.array.set(temp);
+    position.needsUpdate = true;
+
+    geometry.morphAttributes = {};
+    mesh.morphTargetDictionary = {};
+    mesh.morphTargetInfluences = [];
+    mesh.updateMorphTargets();
+
+    geometry.computeVertexNormals();
+  }
+
   registerEffect(
     name: string,
     effectFunction: DeformerEffectFunction,
