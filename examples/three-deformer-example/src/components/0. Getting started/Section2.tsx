@@ -48,9 +48,9 @@ export const Section2 = () => {
       <h3 className="text-2xl font-bold text-md mb-6">Update Option</h3>
       <p className="font-light text-gray-500 sm:text-xl dark:text-gray-400">
         You can selectively update only the options you care about using{' '}
-        <code>updateOption</code>. In this case, taper is applied along the{' '}
-        <b>x-axis</b> with a <b>linear</b> curve — all other defaults are
-        preserved. preserved.
+        <code className="px-1 text-primary text-lg">updateOption()</code>. In
+        this case, taper is applied along the <b>x-axis</b> with a <b>linear</b>{' '}
+        curve — all other defaults are preserved. preserved.
       </p>
       <CodeAndCanvas code={code} mesh={mesh} deformer={deformer} height="150px">
         <div className="flex flex-col w-full gap-3">
