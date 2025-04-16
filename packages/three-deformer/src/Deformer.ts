@@ -43,6 +43,11 @@ class Deformer {
       () => [],
     );
 
+    const nameList = Array.from(
+      { length: Object.keys(this.effects).length },
+      () => '',
+    );
+
     if (positionList.length === 0) return;
 
     mesh.geometry.morphAttributes.position = [];
@@ -75,7 +80,8 @@ class Deformer {
       const z = positionAttribute.getZ(i);
 
       Object.entries(this.effects).forEach(
-        ([_, { effectFunction, matrix }], j) => {
+        ([name, { effectFunction, matrix }], j) => {
+          nameList[j] = name;
           const vertex = new Vector3(x, y, z);
           vertex.applyMatrix4(matrix);
           vertex.applyMatrix4(diffMatrix);
@@ -90,12 +96,57 @@ class Deformer {
     }
 
     for (let i = 0; i < positionList.length; i++) {
-      mesh.geometry.morphAttributes.position.push(
-        new Float32BufferAttribute(positionList[i], 3),
-      );
+      const attribute = new Float32BufferAttribute(positionList[i], 3);
+      attribute.name = nameList[i];
+      mesh.geometry.morphAttributes.position.push(attribute);
     }
 
     mesh.updateMorphTargets();
+  }
+
+  bakeDeformers(): void {
+    this.object.traverse((child: Object3D) => {
+      if (!(child instanceof Mesh)) return;
+
+      this.bakeMesh(child);
+    });
+    Object.keys(this.effects).forEach(name => this.unregisterEffect(name));
+  }
+
+  bakeMesh(mesh: Mesh): void {
+    const geometry = mesh.geometry;
+    const position = geometry.attributes.position;
+    const morphAttributes = geometry.morphAttributes.position;
+
+    if (!mesh.morphTargetInfluences || !morphAttributes?.length) return;
+
+    const temp = position.array.slice();
+
+    for (let i = 0; i < morphAttributes.length; i++) {
+      const influence = mesh.morphTargetInfluences[i];
+      if (!influence) continue;
+
+      const morph = morphAttributes[i];
+
+      for (let j = 0; j < morph.count; j++) {
+        temp[j * 3 + 0] +=
+          (morph.array[j * 3 + 0] - position.array[j * 3 + 0]) * influence;
+        temp[j * 3 + 1] +=
+          (morph.array[j * 3 + 1] - position.array[j * 3 + 1]) * influence;
+        temp[j * 3 + 2] +=
+          (morph.array[j * 3 + 2] - position.array[j * 3 + 2]) * influence;
+      }
+    }
+
+    position.array.set(temp);
+    position.needsUpdate = true;
+
+    geometry.morphAttributes = {};
+    mesh.morphTargetDictionary = {};
+    mesh.morphTargetInfluences = [];
+    mesh.updateMorphTargets();
+
+    geometry.computeVertexNormals();
   }
 
   registerEffect(
@@ -109,7 +160,6 @@ class Deformer {
     }
 
     this.effects[name] = {
-      index: Object.keys(this.effects).length,
       effectFunction,
       option: option ?? {},
       matrix: matrix ?? new Matrix4(),
@@ -123,15 +173,10 @@ class Deformer {
 
   updateMatrix(name: string, matrix: Matrix4): void {
     const effect = this.effects[name];
-    const index = this.effects[name]?.index ?? -1;
 
-    if (!effect || index === -1) {
+    if (!effect) {
       throw new Error('[three-deformer] Effect does not exist');
     }
-
-    let weight = effect.weight;
-
-    effect.matrix = matrix;
 
     this.object.traverse((child: Object3D) => {
       if (!(child instanceof Mesh)) return;
@@ -141,13 +186,7 @@ class Deformer {
       child.geometry = tempGeometry;
     });
 
-    this.unregisterEffect(name);
-    this.registerEffect(
-      name,
-      effect.effectFunction,
-      effect.matrix,
-      effect.option,
-    );
+    this.effects[name].matrix = matrix;
 
     this.object.traverse((child: Object3D) => {
       if (!(child instanceof Mesh)) return;
@@ -155,19 +194,19 @@ class Deformer {
       this.computeMorphTargets(child);
     });
 
-    this.setWeight(name, weight);
+    this.setWeight(name, effect.weight);
   }
 
-  updateOption<T extends EffectType>(name: T, value: EffectOptionMap[T]): void {
+  updateOption<T extends EffectType>(
+    name: T,
+    option: EffectOptionMap[T],
+  ): void {
     const effect = this.effects[name];
-    const index = this.effects[name]?.index ?? -1;
-    if (!effect || index === -1) {
+    if (!effect) {
       throw new Error('[three-deformer] Effect does not exist');
     }
 
-    const weight = effect.weight;
-
-    effect.option = { ...effect.option, ...value };
+    effect.option = { ...effect.option, ...option };
 
     this.object.traverse((child: Object3D) => {
       if (!(child instanceof Mesh)) return;
@@ -197,7 +236,7 @@ class Deformer {
       this.computeMorphTargets(child);
     });
 
-    this.setWeight(name, weight);
+    this.setWeight(name, effect.weight);
   }
 
   addTwistDeformer(
@@ -458,9 +497,7 @@ class Deformer {
   }
 
   setWeight(name: string, value: number) {
-    const index = this.effects[name]?.index ?? -1;
-
-    if (index === -1) {
+    if (!(name in this.effects)) {
       throw new Error(`[three-deformer] Effect '${name}' does not exist`);
     }
 
@@ -469,13 +506,13 @@ class Deformer {
     this.object.traverse((child: Object3D) => {
       if (!(child instanceof Mesh)) return;
 
-      if (!child.morphTargetInfluences) {
+      if (!child.morphTargetDictionary || !child.morphTargetInfluences) {
         throw new Error(
-          `[three-deformer] Mesh does not have morphTargetInfluences. Make sure to call 'apply()' before using this deformer.`,
+          `[three-deformer] Mesh does not have morphTargetDictionary. Make sure to call 'apply()' before using this deformer.`,
         );
       }
 
-      child.morphTargetInfluences[index] = value;
+      child.morphTargetInfluences[child.morphTargetDictionary[name]] = value;
     });
   }
 }
