@@ -61,27 +61,20 @@
 				deformer = new Deformer(mesh);
 				deformer.addTwistDeformer();
 
-                // deformer.addTaperDeformer();
-                
 				deformer.applyDeformers();
-
-                deformer.setWeight('twist', 0.5)
-
 
                 const _matrix = new THREE.Matrix4();
                 _matrix.makeScale(5, 0, 0)
                 _matrix.setPosition(0, 1.85, 0)
-                deformer.updateOption('twist',{strength : 2})
                 deformer.updateMatrix('twist', _matrix)
 
-
+				deformer.setWeight('twist', 0.5)
 
                 deformer.bakeDeformers()
 
-                deformer.addTaperDeformer()
+                deformer.addTwistDeformer()
+				deformer.updateOption('twist',  {strength : 1, axis : 'y'})
                 deformer.applyDeformers();
-
-                // deformer.setWeight('taper', 0.3)
 
 				scene.add( mesh );
 
@@ -118,102 +111,15 @@
 
 				// Set up dat.GUI to control targets
 				const params = {
-					taper: 0,
-					axis : 'x',
-					invert : false,
-					curveType: 'linear',
-					position : {
-						x: 0,
-						y: 0,
-						z: 0
-					},
-					rotation : {
-						x: 0,
-						y: 0,
-						z: 0
-					},
-					scale : {
-						x: 1,
-						y: 1,
-						z: 1
-					}
+					twist: 0,
 				};
 				const gui = new GUI( { title: 'Morph Targets' } );
 
-				gui.add( params, 'taper', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+				gui.add( params, 'twist', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
-					deformer.setWeight('taper', value)
+					deformer.setWeight('twist', value)
 
 				} );
-
-				// gui.add(params, 'axis', ['x', 'y', 'z']).onChange(function (value) {
-				// 	deformer.updateOption('taper', { axis : value });
-				// });
-
-				// gui.add(params, 'invert', [true, false]).onChange(function (value) {
-				// 	deformer.updateOption('taper', { invert : value });
-				// });
-
-				// gui.add(params, 'curveType', ['linear', 'quadratic', 'sin', 'cubic']).onChange(function (value) {
-				// 	deformer.updateOption('taper', { curveType : value});
-				// });
-
-				// const folder = gui.addFolder( 'Position' );
-				// folder.add( params.position, 'x', -3, 3 ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper',_matrix, params);
-
-				// } );
-				// folder.add( params.position, 'y', -3, 3 ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper',_matrix, params);
-
-				// } );
-				// folder.add( params.position, 'z', -3, 3 ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper',_matrix, params);
-
-				// } );
-
-				// const folder2 = gui.addFolder( 'Rotation' );
-
-				// folder2.add( params.rotation, 'x', -Math.PI, Math.PI ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper',_matrix, params);
-
-				// } );
-
-				// folder2.add( params.rotation, 'y', -Math.PI, Math.PI ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper', _matrix, params);
-
-				// } );
-
-				// folder2.add( params.rotation, 'z', -Math.PI, Math.PI ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper', _matrix, params);
-
-				// } );
-
-				// const folder3 = gui.addFolder( 'Scale' );
-
-				// folder3.add( params.scale, 'x', 0, 3 ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper', _matrix, params);
-
-				// } );
-
-				// folder3.add( params.scale, 'y', 0, 3 ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper', _matrix, params);
-
-				// } );
-
-				// folder3.add( params.scale, 'z', 0, 3 ).step(0.01).onChange( function ( value ) {
-
-				// 	updateMatrix('taper', _matrix, params);
-
-				// } );
 
 			}
 
