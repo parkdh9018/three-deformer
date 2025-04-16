@@ -34,7 +34,6 @@ export type DeformerEffectFunction = (
   index?: number,
 ) => Vector3;
 export type DeformerEffect = {
-  index: number;
   effectFunction: DeformerEffectFunction;
   matrix: Matrix4;
   option: EffectOption;
