@@ -38,6 +38,7 @@
         "type": "git",
         "url": "https://github.com/parkdh9018/three-deformer"
     },
+    "homepage": "https://parkdh9018.github.io/three-deformer/",
     "devDependencies": {
         "@babel/core": "^7.26.0",
         "@babel/preset-env": "^7.26.0",
