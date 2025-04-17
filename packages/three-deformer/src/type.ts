@@ -31,8 +31,10 @@ export type EffectOption = EffectOptionMap[EffectType];
 
 export type DeformerEffectFunction = (
   vertex: Vector3,
+  option?: object,
   index?: number,
 ) => Vector3;
+
 export type DeformerEffect = {
   effectFunction: DeformerEffectFunction;
   matrix: Matrix4;

@@ -80,13 +80,19 @@ class Deformer {
       const z = positionAttribute.getZ(i);
 
       Object.entries(this.effects).forEach(
-        ([name, { effectFunction, matrix }], j) => {
+        ([name, { effectFunction, matrix, option }], j) => {
           nameList[j] = name;
           const vertex = new Vector3(x, y, z);
           vertex.applyMatrix4(matrix);
           vertex.applyMatrix4(diffMatrix);
 
-          const vector = effectFunction(vertex, i);
+          const wrappedFunction = (vertex: Vector3, index?: number) => {
+            return effectFunction(vertex, option, index ?? 0);
+          };
+
+          const vector = option
+            ? effectFunction(vertex, option, i)
+            : wrappedFunction(vertex, i);
 
           vertex.applyMatrix4(reverseDiffMatrix);
 
@@ -222,12 +228,10 @@ class Deformer {
       this.addDeformer(name, effect.option, effect.matrix);
     } else {
       // custom deformer
-      this.registerEffect(
-        name,
-        effect.effectFunction,
-        effect.matrix,
-        effect.option,
-      );
+
+      const effectFunction = effect.effectFunction;
+
+      this.registerEffect(name, effectFunction, effect.matrix, effect.option);
     }
 
     this.object.traverse((child: Object3D) => {
@@ -468,6 +472,21 @@ class Deformer {
       matrix,
       option,
     );
+  }
+
+  addCustomDeformer(
+    name: string,
+    func: DeformerEffectFunction,
+    option: object,
+    matrix: Matrix4 = new Matrix4(),
+  ): void {
+    if (!name || typeof func !== 'function') {
+      throw new Error(
+        '[three-deformer] Custom deformer requires a name and an effect function.',
+      );
+    }
+
+    this.registerEffect(name, func, matrix, option);
   }
 
   addDeformer<T extends EffectType>(
