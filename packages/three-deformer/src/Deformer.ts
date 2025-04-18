@@ -8,6 +8,7 @@ import {
 } from 'three';
 import {
   BendOption,
+  CustomEffectFunction,
   DeformerEffect,
   DeformerEffectFunction,
   EffectOption,
@@ -16,8 +17,8 @@ import {
   TaperOption,
   TwistOption,
 } from './type';
+import { isBuiltinEffect, isCustomEffect, isEffectType } from './typeGuard';
 
-const EffectTypeList = ['twist', 'taper', 'bend'] as EffectType[];
 class Deformer {
   object: Object3D;
   objectBoundingBox: Box3;
@@ -79,20 +80,28 @@ class Deformer {
       const y = positionAttribute.getY(i);
       const z = positionAttribute.getZ(i);
 
-      Object.entries(this.effects).forEach(
-        ([name, { effectFunction, matrix }], j) => {
-          nameList[j] = name;
-          const vertex = new Vector3(x, y, z);
-          vertex.applyMatrix4(matrix);
-          vertex.applyMatrix4(diffMatrix);
+      Object.entries(this.effects).forEach(([name, effect], j) => {
+        const { matrix, option } = effect;
+        nameList[j] = name;
+        const vertex = new Vector3(x, y, z);
+        vertex.applyMatrix4(matrix);
+        vertex.applyMatrix4(diffMatrix);
 
-          const vector = effectFunction(vertex, i);
+        let vector: Vector3;
 
-          vertex.applyMatrix4(reverseDiffMatrix);
+        if (isBuiltinEffect(effect)) {
+          vector = effect.effectFunction(vertex, i);
+        } else if (isCustomEffect(effect)) {
+          vector = effect.effectFunction(vertex, option, i);
+        } else {
+          throw new Error(
+            `[three-deformer] Unknown effect type: ${effect.type}`,
+          );
+        }
+        vertex.applyMatrix4(reverseDiffMatrix);
 
-          vector.toArray(positionList[j], positionList[j].length);
-        },
-      );
+        vector.toArray(positionList[j], positionList[j].length);
+      });
     }
 
     for (let i = 0; i < positionList.length; i++) {
@@ -151,7 +160,7 @@ class Deformer {
 
   registerEffect(
     name: string,
-    effectFunction: DeformerEffectFunction,
+    effectFunction: DeformerEffectFunction | CustomEffectFunction,
     matrix?: Matrix4,
     option?: EffectOption,
   ): void {
@@ -160,6 +169,7 @@ class Deformer {
     }
 
     this.effects[name] = {
+      type: isEffectType(name) ? 'builtin' : 'custom',
       effectFunction,
       option: option ?? {},
       matrix: matrix ?? new Matrix4(),
@@ -217,7 +227,7 @@ class Deformer {
 
     this.unregisterEffect(name);
 
-    if (EffectTypeList.includes(name)) {
+    if (isEffectType(name)) {
       // built-in deformer (twist, taper, bend)
       this.addDeformer(name, effect.option, effect.matrix);
     } else {
@@ -263,7 +273,7 @@ class Deformer {
 
     this.registerEffect(
       'twist',
-      vertex => {
+      (vertex: Vector3) => {
         const { x, y, z } = vertex;
 
         switch (axis) {
@@ -328,7 +338,7 @@ class Deformer {
 
     this.registerEffect(
       'taper',
-      vertex => {
+      (vertex: Vector3) => {
         const { x, y, z } = vertex;
         let t = 0;
 
@@ -420,7 +430,7 @@ class Deformer {
 
     this.registerEffect(
       'bend',
-      vertex => {
+      (vertex: Vector3) => {
         vertex.applyMatrix4(rotationMatrix);
 
         const { x, y, z } = vertex;
@@ -468,6 +478,21 @@ class Deformer {
       matrix,
       option,
     );
+  }
+
+  addCustomDeformer(
+    name: string,
+    func: DeformerEffectFunction,
+    option: object,
+    matrix: Matrix4 = new Matrix4(),
+  ): void {
+    if (!name || typeof func !== 'function') {
+      throw new Error(
+        '[three-deformer] Custom deformer requires a name and an effect function.',
+      );
+    }
+
+    this.registerEffect(name, func, matrix, option);
   }
 
   addDeformer<T extends EffectType>(
