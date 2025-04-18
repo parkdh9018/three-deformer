@@ -203,7 +203,7 @@
 					new THREE.Vector3(params.position.x, params.position.y, params.position.z), 
 					new THREE.Quaternion().setFromEuler(new THREE.Euler(params.rotation.x, params.rotation.y, params.rotation.z) ),
 					new THREE.Vector3(params.scale.x, params.scale.y, params.scale.z));
-				deformer.transform(name, matrix);
+				deformer.updateMatrix(name, matrix);
 
 			}
 

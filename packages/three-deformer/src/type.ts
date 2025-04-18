@@ -29,15 +29,23 @@ export interface EffectOptionMap {
 export type EffectType = keyof EffectOptionMap;
 export type EffectOption = EffectOptionMap[EffectType];
 
-export type DeformerEffectFunction = (
+export type CustomEffectFunction = (
   vertex: Vector3,
   option?: object,
   index?: number,
 ) => Vector3;
 
+export type DeformerEffectFunction = (
+  vertex: Vector3,
+  index?: number,
+) => Vector3;
+
+export type DeformerEffectType = 'builtin' | 'custom';
+
 export type DeformerEffect = {
-  effectFunction: DeformerEffectFunction;
+  type: DeformerEffectType;
+  effectFunction: DeformerEffectFunction | CustomEffectFunction;
   matrix: Matrix4;
-  option: EffectOption;
+  option: object;
   weight: number;
 };
