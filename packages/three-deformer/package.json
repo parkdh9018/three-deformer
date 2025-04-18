@@ -1,6 +1,6 @@
 {
     "name": "three-deformer",
-    "version": "1.1.4",
+    "version": "1.2.0",
     "description": "Deformer in three.js",
     "main": "dist/bundle.cjs.js",
     "module": "dist/bundle.esm.js",
