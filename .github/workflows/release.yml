@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'chore/version')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build package
+        run: pnpm --filter three-deformer build
+
+      - name: Publish to npm using Changesets
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm run release
+          version: pnpm changeset version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Zip dist files
+        run: |
+          cd packages/three-deformer/dist
+          zip -r ../../../../three-deformer-artifact.zip .
+
+      - name: Collect categorized changelog from commits
+        id: changelog
+        run: |
+          VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "log<<EOF" >> $GITHUB_OUTPUT
+
+          COMMITS=$(git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+
+          FEATS=$(echo "$COMMITS" | grep "^feat:")
+          FIXES=$(echo "$COMMITS" | grep "^fix:")
+          OTHERS=$(echo "$COMMITS" | grep -v "^feat:" | grep -v "^fix:")
+
+          if [ ! -z "$FEATS" ]; then
+            echo "### ✨ Features" >> $GITHUB_OUTPUT
+            echo "$FEATS" | sed 's/^feat:/-/' >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+          fi
+
+          if [ ! -z "$FIXES" ]; then
+            echo "### 🐛 Fixes" >> $GITHUB_OUTPUT
+            echo "$FIXES" | sed 's/^fix:/-/' >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+          fi
+
+          if [ ! -z "$OTHERS" ]; then
+            echo "### 📦 Others" >> $GITHUB_OUTPUT
+            echo "$OTHERS" | sed 's/^/-/' >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+          fi
+
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.changelog.outputs.version }}
+          name: Release ${{ steps.changelog.outputs.version }}
+          body: ${{ steps.changelog.outputs.log }}
+          files: three-deformer-artifact.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
