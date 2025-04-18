@@ -1,5 +1,11 @@
 # three-deformer
 
+## 1.1.3
+
+### Patch Changes
+
+- auto test2
+
 ## 1.1.2
 
 ### Patch Changes
