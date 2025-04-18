@@ -1,5 +1,11 @@
 # three-deformer
 
+## 1.2.0
+
+### Minor Changes
+
+- addCustomDeformer function
+
 ## 1.1.4
 
 ### Patch Changes
