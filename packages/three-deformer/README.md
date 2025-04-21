@@ -1,7 +1,10 @@
 # three-deformer
 
+[![npm version](https://img.shields.io/npm/v/three-deformer.svg?style=flat-square)](https://www.npmjs.com/package/three-deformer)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/three-deformer?style=flat-square)](https://bundlephobia.com/package/three-deformer)
+
 <p align="center">
-  <img src="../../image/bend_example.png" alt="three-deformer preview" width="500"/>
+  <img src="https://raw.githubusercontent.com/parkdh9018/three-deformer/main/image/bend_example.png" alt="three-deformer preview" width="500"/>
 </p>
 
 A lightweight and flexible library for applying geometric deformers to 3D meshes in [Three.js](https://threejs.org/).
@@ -67,12 +70,17 @@ deformer.setWeight('twist', 0.5);
 
 #### Custom deformer
 
-You can define your own deformation logic using `registerEffect`:
+You can define your own deformation logic using `addCustomDeformer`:
 
 ```javascript
-deformer.registerEffect('myDeformer', vertex => {
-  const { x, y, z } = vertex;
-  vertex.set(x, vertex.y + Math.sin(vertex.x), z);
-  return vertex;
-});
+deformer.addCustomDeformer(
+  'wave',
+  (vertex, option) => {
+    const { amplitude = 0.5, frequency = 2 } = option;
+    vertex.y += Math.sin(vertex.x * frequency) * amplitude;
+    return vertex;
+  },
+  { amplitude: 0.5, frequency: 2 },
+);
+deformer.applyDeformers();
 ```
