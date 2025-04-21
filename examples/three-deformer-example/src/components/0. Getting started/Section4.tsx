@@ -88,6 +88,12 @@ export const Section4 = () => {
           />
         </div>
       </CodeAndCanvas>
+      <div className="bg-accent p-5 rounded-lg text-accent-content opacity-80">
+        <p className="text-2xl font-bold text-md mb-6">💡 Important</p>
+        <span className="font-bold">bakeDeformers()</span> applies the current
+        deformation and clears all deformers. Use it when you want to finalize
+        the shape. for it to take effect on your mesh.
+      </div>
     </div>
   );
 };
