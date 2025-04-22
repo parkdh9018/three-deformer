@@ -1,10 +1,6 @@
 import * as THREE from 'three';
 import { CurveType, Deformer } from 'three-deformer';
 import { useRecoilValue } from 'recoil';
-import {
-  EffectTypeWithCustom,
-  selectedDeformerState,
-} from '../../state/atoms/deformerAtom';
 import { customFunctionSelector } from '../../state/atoms/customFunctionAtom';
 import { Canvas } from '@react-three/fiber';
 import {
@@ -14,9 +10,13 @@ import {
   OrbitControls,
 } from '@react-three/drei';
 import { DeformerController } from './DeformerController';
+import { EffectTypeWithCustom } from '../../types/deformerType';
 
-export const CanvasArea = () => {
-  const selected = useRecoilValue(selectedDeformerState);
+type Props = {
+  selected: EffectTypeWithCustom;
+};
+
+export const CanvasArea = ({ selected }: Props) => {
   const customFunction = useRecoilValue(customFunctionSelector);
 
   const mesh = new THREE.Mesh();
