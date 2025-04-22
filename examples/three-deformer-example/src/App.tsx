@@ -2,8 +2,9 @@ import { Sidebar } from './components/Sidebar';
 import { Viewer } from './components/1. Interactive Deformers/Viewer';
 import './app.css';
 import { Leva } from 'leva';
-import { Page } from './components/0. Getting started/Page';
+import { Page } from './components/0. Getting started/StartedPage';
 import { Route, Routes } from 'react-router-dom';
+import { ApiPage } from './components/2. API/ApiPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/taper" element={<Viewer selected="taper" />} />
           <Route path="/bend" element={<Viewer selected="bend" />} />
           <Route path="/custom" element={<Viewer selected="custom" />} />
+          <Route path="/api" element={<ApiPage />} />
         </Routes>
       </div>
       <div style={{ position: 'absolute', top: 62, right: 10 }}>

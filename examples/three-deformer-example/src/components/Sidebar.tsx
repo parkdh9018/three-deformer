@@ -19,14 +19,7 @@ export const Sidebar = () => {
               </li>
             ))}
           </ul>
-          {/* <a
-            className="cursor-pointer"
-            onClick={() => {
-              setIndex(2);
-            }}
-          >
-            API
-          </a> */}
+          <Link to="/api">API</Link>
         </li>
       </ul>
     </div>
