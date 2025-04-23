@@ -15,8 +15,8 @@ export const BakeDeformers = () => {
         <p className="text-sm text-base-content/80 mt-2">
           This permanently applies the deformation results to the geometry by
           collapsing the morph targets into the base vertex data. After baking,
-          you can remove the deformers and the object will keep its deformed
-          shape.
+          deformers are automatically cleared, and the mesh remains in its
+          deformed state.
         </p>
       </MethodTemplate>
     </>
