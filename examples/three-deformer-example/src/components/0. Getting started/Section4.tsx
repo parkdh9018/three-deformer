@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { CodeAndCanvas } from '../PageComponents/CodeAndCanvas';
 import * as THREE from 'three';
 import { Deformer } from 'three-deformer';
+import { ApiLink } from '../PageComponents/ApiLink';
 const code = `
 // Add initial twist deformer
 deformer.addDeformer('twist');
@@ -70,7 +71,7 @@ export const Section4 = () => {
       <ul className="list-disc pl-8 text-gray-500 space-y-1 sm:text-xl">
         <li>Apply a twist deformer with a custom matrix and weight</li>
         <li>
-          Use <code className="px-1 text-primary text-lg">bakeDeformers()</code>{' '}
+          Use <ApiLink functionName="bakeDeformers" />
           to permanently apply the deformation
         </li>
         <li>Add another twist deformer using a different axis</li>
@@ -88,6 +89,12 @@ export const Section4 = () => {
           />
         </div>
       </CodeAndCanvas>
+      <div className="bg-accent p-5 rounded-lg text-accent-content opacity-80">
+        <p className="text-2xl font-bold text-md mb-6">💡 Important</p>
+        <ApiLink functionName="bakeDeformers" colorName="neutral" />
+        applies the current deformation and clears all deformers. Use it when
+        you want to finalize the shape. for it to take effect on your mesh.
+      </div>
     </div>
   );
 };

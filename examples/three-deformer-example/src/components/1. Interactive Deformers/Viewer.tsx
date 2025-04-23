@@ -1,12 +1,13 @@
-import { useRecoilValue } from 'recoil';
 import { CanvasArea } from './CanvasArea';
-import { selectedDeformerState } from '../../state/atoms/deformerAtom';
 import { capitalizeFirstLetter } from '../../utils';
 import { CustomCodeSandbox } from './CustomCodeSandbox';
+import { EffectTypeWithCustom } from '../../types/deformerType';
 
-export const Viewer = () => {
-  const selected = useRecoilValue(selectedDeformerState);
+type Props = {
+  selected: EffectTypeWithCustom;
+};
 
+export const Viewer = ({ selected }: Props) => {
   const onModalButtonClick = () => {
     const modal = document.getElementById('my_modal_1') as HTMLDialogElement;
     modal.showModal();
@@ -32,7 +33,7 @@ export const Viewer = () => {
         </div>
       </div>
       <div className="h-[calc(100vh-64px)] w-full">
-        <CanvasArea />
+        <CanvasArea selected={selected} />
       </div>
       <CustomCodeSandbox />
     </div>
