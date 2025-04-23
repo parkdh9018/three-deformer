@@ -1,5 +1,8 @@
 import { ScrollToAnchor } from '../PageComponents/ScrollToAnchor';
 import { ConstructorSection } from './ConstructorSection';
+import { AddBendDeformer } from './methods/AddBendDeformer';
+import { AddTaperDeformer } from './methods/AddTaperDeformer';
+import { AddTwistDeformer } from './methods/AddTwistDeformer';
 import { MethodsSection } from './MethodsSection';
 import { PropertiesSection } from './PropertiesSection';
 
@@ -14,6 +17,12 @@ export const ApiPage = () => {
         <PropertiesSection />
         <div className="divider" />
         <MethodsSection />
+        <div className="divider" />
+        <AddTwistDeformer />
+        <div className="divider" />
+        <AddTaperDeformer />
+        <div className="divider" />
+        <AddBendDeformer />
       </div>
       <ScrollToAnchor />
     </div>
