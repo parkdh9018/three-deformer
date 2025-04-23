@@ -9,5 +9,5 @@ export default defineConfig({
     outDir: 'build',
     emptyOutDir: true,
   },
-  base: '/three-deformer/',
+  base: '/three-deformer',
 });
