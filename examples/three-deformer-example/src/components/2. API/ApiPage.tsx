@@ -1,3 +1,4 @@
+import { ScrollToAnchor } from '../PageComponents/ScrollToAnchor';
 import { ConstructorSection } from './ConstructorSection';
 import { MethodsSection } from './MethodsSection';
 import { PropertiesSection } from './PropertiesSection';
@@ -14,6 +15,7 @@ export const ApiPage = () => {
         <div className="divider" />
         <MethodsSection />
       </div>
+      <ScrollToAnchor />
     </div>
   );
 };

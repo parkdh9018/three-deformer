@@ -6,9 +6,10 @@ type Props = {
 
 export const MethodTemplate = ({ functionName, title, children }: Props) => {
   return (
-    <div id={functionName} className="mb-10 scroll-mt-20">
+    <div className="mb-10 scroll-mt-20">
       <div className="mb-1">
         <a
+          id={functionName}
           href={`#${functionName}`}
           className="link-hover link-info text-lg font-semibold"
         >

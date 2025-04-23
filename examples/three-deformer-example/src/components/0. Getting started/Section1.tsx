@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { CodeAndCanvas } from '../PageComponents/CodeAndCanvas';
 import * as THREE from 'three';
 import { Deformer } from 'three-deformer';
+import { ApiLink } from '../PageComponents/ApiLink';
 
 const code = `
 import * as THREE from 'three';
@@ -76,8 +77,8 @@ export const Section1 = () => {
         <div className="bg-accent p-5 rounded-lg text-accent-content opacity-80">
           <p className="text-2xl font-bold text-md mb-6">💡 Important</p>
           After adding any deformer, you must call{' '}
-          <span className="font-bold">applyDeformers()</span> for it to take
-          effect on your mesh.
+          <ApiLink functionName="applyDeformers" colorName="neutral" />
+          for it to take effect on your mesh.
         </div>
       </div>
     </>
