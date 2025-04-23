@@ -1,8 +1,8 @@
 import { useControls } from 'leva';
 import * as THREE from 'three';
 import { AxisType, Deformer, EffectType } from 'three-deformer';
-import { EffectTypeWithCustom } from '../../state/atoms/deformerAtom';
 import { useMemo } from 'react';
+import { EffectTypeWithCustom } from '../../types/deformerType';
 
 type Props = {
   name: EffectTypeWithCustom;
