@@ -7,6 +7,7 @@
         "examples/*"
     ],
     "scripts": {
+        "example:build": "pnpm --filter three-deformer-example run build",
         "build": "pnpm --filter three-deformer run build",
         "lib": "pnpm --filter three-deformer run dev",
         "release": "pnpm changeset publish",
