@@ -15,22 +15,20 @@ export const Viewer = ({ selected }: Props) => {
 
   return (
     <div className="h-full w-full">
-      <div className="navbar bg-base-100 shadow-sm">
-        <div className="flex-1">
+      <div className="navbar bg-base-100 shadow-sm flex gap-5">
+        <div>
           <span className="ml-2 text-2xl font-bold">
             {capitalizeFirstLetter(selected)}
           </span>
         </div>
-        <div className="flex-none">
-          {selected === 'custom' && (
-            <button
-              className="btn btn-outline btn-primary btn-sm rounded-btn"
-              onClick={onModalButtonClick}
-            >
-              Custom Code
-            </button>
-          )}
-        </div>
+        {selected === 'custom' && (
+          <button
+            className="btn btn-outline btn-info btn-sm rounded-btn"
+            onClick={onModalButtonClick}
+          >
+            Custom Code
+          </button>
+        )}
       </div>
       <div className="h-[calc(100vh-64px)] w-full">
         <CanvasArea selected={selected} />

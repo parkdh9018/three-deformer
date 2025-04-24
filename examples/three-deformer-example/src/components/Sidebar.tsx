@@ -6,7 +6,7 @@ import { methodMap } from './2. API/methods/methodMap';
 export const Sidebar = () => {
   return (
     <>
-      <ul className="menu p-2 fixed">
+      <ul className="menu p-2">
         <li className="text-2xl font-bold menu-title">three-deformer</li>
         <div className="overflow-y-auto h-[calc(100vh-4rem)] pr-10">
           <li>
