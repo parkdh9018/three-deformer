@@ -22,14 +22,14 @@ function App() {
         <input id="my-drawer" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content">
           <div className="flex flex-row">
-            <div className="basis-2xs bg-base-200 hidden xl:block">
+            <div className="basis-2xs bg-base-200 hidden md:block">
               <Sidebar />
             </div>
             <div className="basis-full">
               <label htmlFor="my-drawer">
                 <img
                   src={menuIcon}
-                  className="btn  drawer-button absolute top-3 right-0 block xl:hidden"
+                  className="btn  drawer-button absolute top-3 right-0 block md:hidden"
                   width="20px"
                   height="20px"
                 />

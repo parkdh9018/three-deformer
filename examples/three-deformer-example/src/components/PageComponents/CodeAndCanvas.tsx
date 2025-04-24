@@ -19,7 +19,7 @@ export const CodeAndCanvas = ({
   children,
 }: Props) => {
   return (
-    <div className="flex justify-center gap-5 xl:flex-nowrap flex-wrap flex-row px-3">
+    <div className="flex justify-center gap-5 md:flex-nowrap flex-wrap flex-row px-3">
       <div className="basis-2/3 py-10">
         <MonacoEditor
           theme="vs-dark"
