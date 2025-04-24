@@ -29,7 +29,7 @@ function App() {
               <label htmlFor="my-drawer">
                 <img
                   src={menuIcon}
-                  className="btn  drawer-button absolute top-3 right-10 block xl:hidden"
+                  className="btn  drawer-button absolute top-3 right-0 block xl:hidden"
                   width="20px"
                   height="20px"
                 />
