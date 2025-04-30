@@ -11,7 +11,7 @@ deformer.applyDeformers();
 deformer.setWeight('twist', 0.5);
 deformer.setWeight('taper', 0.5);
 `;
-export const Section3 = () => {
+export const Section_multipleDeformers = () => {
   const [twistValue, setTwistValue] = useState(50);
   const [taperValue, setTaperValue] = useState(50);
 

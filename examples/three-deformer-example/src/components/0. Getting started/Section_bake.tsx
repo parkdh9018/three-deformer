@@ -23,7 +23,7 @@ deformer.addDeformer('twist');
 deformer.updateOption('twist', { axis: 'y' });
 deformer.applyDeformers();
 `;
-export const Section4 = () => {
+export const Section_bake = () => {
   const [twistValue, setTwistValue] = useState(0);
 
   const mesh = useMemo(() => {

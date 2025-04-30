@@ -10,6 +10,7 @@ import { AddDeformer } from './AddDeformer';
 import { AddTwistDeformer } from './AddTwistDeformer';
 import { AddBendDeformer } from './AddBendDeformer';
 import { AddTaperDeformer } from './AddTaperDeformer';
+import { AddCustomDeformer } from './AddCustomDeformer';
 
 export const methodMap: Record<string, React.FC> = {
   ApplyDeformers,
@@ -24,4 +25,5 @@ export const methodMap: Record<string, React.FC> = {
   AddTwistDeformer,
   AddBendDeformer,
   AddTaperDeformer,
+  AddCustomDeformer,
 };
