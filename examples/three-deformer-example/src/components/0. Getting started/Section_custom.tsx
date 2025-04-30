@@ -18,7 +18,7 @@ deformer.addCustomDeformer(
 );
 `;
 export const Section_custom = () => {
-  const [customValue, setCustomValue] = useState(0);
+  const [customValue, setCustomValue] = useState(50);
 
   const mesh = useMemo(() => {
     const geometry = new THREE.BoxGeometry(2, 2, 2, 32, 32, 32);
@@ -43,6 +43,8 @@ export const Section_custom = () => {
     );
 
     result.applyDeformers();
+
+    result.setWeight('wave', customValue / 100);
 
     return result;
   }, [mesh]);
