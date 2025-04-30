@@ -1,5 +1,11 @@
 # three-deformer
 
+## 1.2.2
+
+### Patch Changes
+
+- support optional options in addCustomDeformer with type-safe fallback
+
 ## 1.2.1
 
 ### Patch Changes
