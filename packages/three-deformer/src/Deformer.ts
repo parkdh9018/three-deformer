@@ -22,7 +22,7 @@ import { isBuiltinEffect, isCustomEffect, isEffectType } from './typeGuard';
 class Deformer {
   object: Object3D;
   objectBoundingBox: Box3;
-  effects: Record<string, DeformerEffect>;
+  private effects: Record<string, DeformerEffect<any>> = {};
 
   constructor(object: Object3D) {
     this.object = object;
@@ -158,11 +158,11 @@ class Deformer {
     geometry.computeVertexNormals();
   }
 
-  registerEffect(
+  registerEffect<T extends object = {}>(
     name: string,
-    effectFunction: DeformerEffectFunction | CustomEffectFunction,
+    effectFunction: DeformerEffectFunction | CustomEffectFunction<T>,
     matrix?: Matrix4,
-    option?: EffectOption,
+    option?: T,
   ): void {
     if (this.effects[name]) {
       throw new Error(`[three-deformer] Effect '${name}' already exists`);
@@ -171,7 +171,7 @@ class Deformer {
     this.effects[name] = {
       type: isEffectType(name) ? 'builtin' : 'custom',
       effectFunction,
-      option: option ?? {},
+      option: option ?? ({} as T),
       matrix: matrix ?? new Matrix4(),
       weight: 0,
     };
@@ -480,10 +480,10 @@ class Deformer {
     );
   }
 
-  addCustomDeformer(
+  addCustomDeformer<T extends object = {}>(
     name: string,
-    func: DeformerEffectFunction,
-    option: object,
+    func: CustomEffectFunction<T>,
+    option?: T,
     matrix: Matrix4 = new Matrix4(),
   ): void {
     if (!name || typeof func !== 'function') {
@@ -492,7 +492,7 @@ class Deformer {
       );
     }
 
-    this.registerEffect(name, func, matrix, option);
+    this.registerEffect(name, func, matrix, option ?? ({} as T));
   }
 
   addDeformer<T extends EffectType>(
