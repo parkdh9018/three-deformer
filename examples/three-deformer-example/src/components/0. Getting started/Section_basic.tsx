@@ -28,7 +28,7 @@ deformer.applyDeformers();
 // 4. adjust the deformation weight
 deformer.setWeight('bend', 0.5);`;
 
-export const Section1 = () => {
+export const Section_basic = () => {
   const [value, setValue] = useState(50);
 
   const mesh = useMemo(() => {

@@ -14,7 +14,7 @@ deformer.updateOption('taper', {
 
 const OPTIONS = ['linear', 'quadratic', 'sin', 'cubic'];
 
-export const Section2 = () => {
+export const Section_updateOption = () => {
   const [value, setValue] = useState(50);
 
   const mesh = useMemo(() => {
