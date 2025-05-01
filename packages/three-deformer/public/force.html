@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - morph targets</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css" />
+	</head>
+
+	<body>
+		<div id="container"></div>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/",
+					"Deformer" : "/dist/bundle.esm.js"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+			import Stats from 'three/addons/libs/stats.module.js';
+			import { Deformer } from 'Deformer';
+
+			let container, camera, scene, renderer, mesh;
+			let deformer;
+			let _matrix;
+
+			init();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x8FBCD4 );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 20 );
+				camera.position.z = 10;
+				scene.add( camera );
+
+				scene.add( new THREE.AmbientLight( 0x8FBCD4, 1.5 ) );
+
+				const pointLight = new THREE.PointLight( 0xffffff, 200 );
+				camera.add( pointLight );
+
+                const geometry = new THREE.SphereGeometry( 1, 32, 32 );
+				const material = new THREE.MeshPhongMaterial( {
+					color: 0xff0000,
+					flatShading: true,
+                    wireframe : true
+				} );
+				
+				mesh = new THREE.Mesh( geometry, material );
+
+				deformer = new Deformer(mesh);
+
+
+
+
+				scene.add( mesh );
+
+				// initGUI();
+
+				//stats
+				const stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( function () {
+
+					renderer.render( scene, camera );
+					stats.update();
+
+				} );
+				container.appendChild( renderer.domElement );
+
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.enableZoom = false;
+
+				window.addEventListener( 'resize', onWindowResize );
+                window.addEventListener('click', clickHandler, false);
+
+			}
+
+			function initGUI() {
+
+				_matrix = new THREE.Matrix4();
+
+				// Set up dat.GUI to control targets
+				const params = {
+					force: 0,
+				};
+				const gui = new GUI( { title: 'Morph Targets' } );
+
+				gui.add( params, 'force', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+
+					deformer.setWeight('force', value)
+
+				} );
+
+			}
+
+
+			function updateMatrix(name, matrix, params) {
+
+				matrix.compose(
+					new THREE.Vector3(params.position.x, params.position.y, params.position.z), 
+					new THREE.Quaternion().setFromEuler(new THREE.Euler(params.rotation.x, params.rotation.y, params.rotation.z) ),
+					new THREE.Vector3(params.scale.x, params.scale.y, params.scale.z));
+				deformer.transform(name, matrix);
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+            
+            let cnt = 0;
+            function clickHandler(event) {
+                const x = (event.clientX / window.innerWidth) * 2 - 1;
+                const y = -(event.clientY / window.innerHeight) * 2 + 1;
+                const mouse = new THREE.Vector2(x, y);
+
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(mesh);
+
+                if (intersects.length > 0) {
+                    const intersectPoint = intersects[0].point;
+                    const name = `force${cnt++}`;
+                    deformer.addCustomDeformer(name, (vertex, option) => {
+                        const pointToVertex = new THREE.Vector3().subVectors(vertex, option.point);
+                        const distanceSq = pointToVertex.lengthSq();
+
+                        // 거리 감쇠 적용
+                        const attenuatedForce = option.force / (1 + distanceSq * distanceSq)
+
+                        // 방향 정규화 후 힘 곱하기
+                        const displacement = pointToVertex.normalize().multiplyScalar(attenuatedForce);
+
+                        // vertex 위치에 displacement 추가
+                        return vertex.clone().add(displacement);
+                    },{
+                        point: intersectPoint,
+                        force: 2
+                    });
+				    deformer.applyDeformers();
+
+                    let weight = 0;
+                    const interval = setInterval(() => {
+                        weight += 0.01;
+                        deformer.setWeight(name, weight);
+                        if (weight >= 0.3) {
+                            clearInterval(interval);
+                        }
+                    }, 50);
+                }
+            }
+
+		</script>
+
+	</body>
+</html>
